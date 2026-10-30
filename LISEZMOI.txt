@@ -56,7 +56,7 @@ renseignee) et complete liens, icone, description, loaders et versions.
 Resultat par mod : Trouve / A verifier (correspondance incertaine) / Introuvable.
 Si les deux sites connaissent un mod, les deux liens sont enregistres. Sauf si la case est decochee,
 l'analyse lit aussi les dependances requises de chaque mod analyse : celles deja presentes dans la
-base sont liees, les absentes sont listees pour confirmation, puis ajoutees (avec les deux liens si
+base sont liees, les absentes sont listees pour confirmation, puis ajoutees (et analysees a leur tour pour leurs propres dependances) (avec les deux liens si
 possible) et liees.
 Options : mods non analyses, mods non resolus, selection, ou tous les mods.
 Le bouton ↻ d'une ligne (ou "Actualiser" pour une selection) relance la verification
