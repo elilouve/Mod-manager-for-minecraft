@@ -207,7 +207,7 @@ input.menu{width:150px;font-weight:600}
 <script>
 const I18N={
 en:{
-app_title:`Mod Manager`,find_mod:`🔎 Search mods`,fd_title:`Search mods online`,fd_ph:`Mod name…`,fd_go:`Search`,fd_none:`No result.`,fd_in:`✓ in database`,fd_add:`Add`,fd_added:`Added: {name}`,fd_hint:`Results come from the Modrinth and CurseForge APIs (CurseForge needs an API key). Adding runs the usual online check, which also looks for the other site's link.`,add_mod:`+ Add mod`,scan_online:`🔍 Scan online`,import_csv:`Import CSV`,export_csv:`Export CSV`,lists_menu:`📋 Lists`,lists_menu_t:`Saved lists`,settings:`⚙ Settings`,
+app_title:`Mod Manager`,find_mod:`🔎 Search mods`,fd_title:`Search mods online`,fd_ph:`Mod name…`,fd_go:`Search`,fd_none:`No result.`,fd_in:`✓ in database`,fd_add:`Add`,fd_added:`Added: {name}`,fd_hint:`Results come from the Modrinth and CurseForge APIs (CurseForge needs an API key). Adding runs the usual online check, which also looks for the other site's link, then handles required dependencies.`,add_mod:`+ Add mod`,scan_online:`🔍 Scan online`,import_csv:`Import CSV`,export_csv:`Export CSV`,lists_menu:`📋 Lists`,lists_menu_t:`Saved lists`,settings:`⚙ Settings`,
 h_lists:`Lists`,h_loader:`Loader`,h_version:`Minecraft version`,h_online:`Online data`,h_cats:`Categories`,manage:`✎ manage`,all_mods:`All mods`,all_m:`All`,all_f:`All`,
 sc_ok:`✓ Verified`,sc_warn:`⚠ To review`,sc_bad:`✕ Not found`,sc_none:`Not scanned yet`,st_ok:`✓ verified`,st_warn:`⚠ to review`,st_bad:`✕ not found`,
 search_ph:`Search (name, category, description)…`,count:`{n} shown of {total}`,selected:`{n} selected`,b_download:`⬇ Download (zip)…`,b_refresh:`↻ Refresh`,
@@ -219,7 +219,7 @@ f_icon:`Icon (image URL, optional)`,f_loaders:`Supported loaders`,f_versions:`Mi
 f_deps:`Dependencies to suggest with this mod (useful when the sites do not list them)`,dep_ph:`Type or choose a mod from the database`,cancel:`Cancel`,save:`Save`,close:`Close`,stop:`Stop`,
 saving:`Retrieving info…`,look_first:`Paste a link first.`,looking:`Searching…`,look_ok:`✓ Info retrieved`,dep_cat_default:`Libraries & APIs`,dep_linked:`✓ Required dependencies linked: {names}`,dep_nodeps:`No required dependency found.`,
 dep_m_title:`Required dependencies missing from the database`,dep_m_text:`This mod requires the following mods, which are not in the database yet:`,
-dep_m_q:`Add them now? Each one opens the Add mod window, pre-filled, to review and confirm. The current form is restored afterwards.`,dep_yes:`Add them`,dep_no:`Skip`,
+dep_m_q:`Add them now? Each one opens the Add mod window, pre-filled, to review and confirm. The current form is restored afterwards.`,dep_auto_q:`Add them now? They are created in the database and linked to this mod.`,dep_yes:`Add them`,dep_no:`Skip`,
 dep_add_title:`Add dependency {i}/{n}: {name}`,dep_added:`✓ Dependencies added and linked: {names}`,dep_skipped:`Dependency skipped: {name}`,name_required:`The name is required.`,
 saved_ok:`✓ Mod saved, info updated online`,saved_warn:`⚠ Saved, but the online match needs review`,saved_bad:`✕ Saved, but not found online: check the link`,saved_err:`Saved (online update not possible: {e})`,saved:`Mod saved`,
 confirm_del1:`Remove this mod from the database?`,confirm_deln:`Permanently remove {n} mod(s) from the database?`,
@@ -253,7 +253,7 @@ res_ok:`✓ <b>{n} mod(s)</b> downloaded to:`,res_none:`No mod could be download
 res_fail:`✕ <b>{n} to download manually</b> (a clickable summary is saved next to the zip):`,link_page:`Mod page`,link_files:`Files`,open_rep:`Open summary`,open_dir:`Open folder`,
 dl_cancelled:`Download cancelled.`,load_err:`Loading error: {e}`},
 fr:{
-app_title:`Gestionnaire de mods`,add_mod:`+ Ajouter un mod`,scan_online:`🔍 Analyser en ligne`,import_csv:`Importer un CSV`,export_csv:`Exporter en CSV`,lists_menu:`📋 Listes`,lists_menu_t:`Listes enregistrées`,settings:`⚙ Paramètres`,
+app_title:`Gestionnaire de mods`,find_mod:`🔎 Rechercher des mods`,fd_title:`Rechercher des mods en ligne`,fd_ph:`Nom du mod…`,fd_go:`Rechercher`,fd_none:`Aucun résultat.`,fd_in:`✓ dans la base`,fd_add:`Ajouter`,fd_added:`Ajouté : {name}`,fd_hint:`Les résultats proviennent des API Modrinth et CurseForge (CurseForge nécessite une clé API). L’ajout lance la vérification en ligne habituelle, qui cherche aussi le lien de l’autre site, puis traite les dépendances requises.`,add_mod:`+ Ajouter un mod`,scan_online:`🔍 Analyser en ligne`,import_csv:`Importer un CSV`,export_csv:`Exporter en CSV`,lists_menu:`📋 Listes`,lists_menu_t:`Listes enregistrées`,settings:`⚙ Paramètres`,
 h_lists:`Listes`,h_loader:`Loader`,h_version:`Version de Minecraft`,h_online:`Données en ligne`,h_cats:`Catégories`,manage:`✎ gérer`,all_mods:`Tous les mods`,all_m:`Tous`,all_f:`Toutes`,
 sc_ok:`✓ Vérifiés`,sc_warn:`⚠ À vérifier`,sc_bad:`✕ Introuvables`,sc_none:`Pas encore analysés`,st_ok:`✓ vérifié`,st_warn:`⚠ à vérifier`,st_bad:`✕ introuvable`,
 search_ph:`Rechercher (nom, catégorie, description)…`,count:`{n} affiché(s) sur {total}`,selected:`{n} sélectionné(s)`,b_download:`⬇ Télécharger (zip)…`,b_refresh:`↻ Actualiser`,
@@ -265,7 +265,7 @@ f_icon:`Icône (adresse de l’image, facultatif)`,f_loaders:`Loaders pris en ch
 f_deps:`Dépendances à proposer avec ce mod (utile lorsque les sites ne les indiquent pas)`,dep_ph:`Saisir ou choisir un mod de la base`,cancel:`Annuler`,save:`Enregistrer`,close:`Fermer`,stop:`Arrêter`,
 saving:`Récupération des infos…`,look_first:`Coller d’abord un lien.`,looking:`Recherche…`,look_ok:`✓ Infos récupérées`,dep_cat_default:`Bibliothèques et API`,dep_linked:`✓ Dépendances requises liées : {names}`,dep_nodeps:`Aucune dépendance requise trouvée.`,
 dep_m_title:`Dépendances requises absentes de la base`,dep_m_text:`Ce mod requiert les mods suivants, qui ne figurent pas encore dans la base :`,
-dep_m_q:`Les ajouter maintenant ? Chacun ouvre la fenêtre « Ajouter un mod » pré-remplie, à vérifier et valider. Le formulaire en cours est ensuite restauré.`,dep_yes:`Les ajouter`,dep_no:`Ignorer`,
+dep_m_q:`Les ajouter maintenant ? Chacun ouvre la fenêtre « Ajouter un mod » pré-remplie, à vérifier et valider. Le formulaire en cours est ensuite restauré.`,dep_auto_q:`Les ajouter maintenant ? Ils sont créés dans la base et liés à ce mod.`,dep_yes:`Les ajouter`,dep_no:`Ignorer`,
 dep_add_title:`Ajouter la dépendance {i}/{n} : {name}`,dep_added:`✓ Dépendances ajoutées et liées : {names}`,dep_skipped:`Dépendance ignorée : {name}`,name_required:`Le nom est obligatoire.`,
 saved_ok:`✓ Mod enregistré, infos mises à jour en ligne`,saved_warn:`⚠ Enregistré, mais la correspondance en ligne est à vérifier`,saved_bad:`✕ Enregistré, mais introuvable en ligne : vérifier le lien`,saved_err:`Enregistré (mise à jour en ligne impossible : {e})`,saved:`Mod enregistré`,
 confirm_del1:`Supprimer ce mod de la base ?`,confirm_deln:`Supprimer définitivement {n} mod(s) de la base ?`,
@@ -481,7 +481,25 @@ $('#fdRes').onclick=async e=>{const b=e.target.closest('button[data-k]');if(!b)r
   const url=r.src==='modrinth'?'https://modrinth.com/mod/'+r.slug:'https://www.curseforge.com/minecraft/mc-mods/'+r.slug;
   try{await api('/api/mod',{name:r.title,[r.src==='modrinth'?'modrinth_url':'curseforge_url']:url,icon_url:r.icon,description:r.description,
       category:(F.cat&&F.cat!=='__none')?F.cat:'',scan_status:''});
-    r.in_db=r.title;toast(t('fd_added',{name:r.title}));await load();fdSearch()}catch(x){alert(x.message);b.disabled=false;b.textContent=t('fd_add')}};
+    r.in_db=r.title;toast(t('fd_added',{name:r.title}));await load();
+    const nm=S.mods.find(m=>(r.src==='modrinth'?m.modrinth_slug:m.curseforge_slug)===r.slug);
+    if(nm)await fdDeps(nm.id,nm.name);
+    fdSearch()}catch(x){alert(x.message);b.disabled=false;b.textContent=t('fd_add')}};
+
+async function fdDeps(id,name,depth=0){
+  if(depth>6)return;
+  let r; try{r=await api('/api/mod/deps',{id})}catch(x){return}
+  if(r.linked.length)toast(t('dep_linked',{names:r.linked.join(', ')}));
+  if(!r.missing.length)return;
+  const yes=await new Promise(res=>{
+    $('#pTitle').textContent=t('dep_m_title');
+    $('#pBody').innerHTML=`<p style="margin:0">${esc(t('dep_m_text'))}</p>`+r.missing.map(d=>`<div class="fail"><b>${esc(d.title)}</b><small>${esc(d.description)}</small></div>`).join('')+`<p class="hint" style="margin:0">${esc(t('dep_auto_q'))}</p>`;
+    $('#pFoot').innerHTML=`<button id="pNo">${t('dep_no')}</button><button class="primary" id="pOk">${t('dep_yes')}</button>`;
+    const d=$('#dPick'); let ok=false; d.onclose=()=>{d.onclose=null;res(ok)};
+    $('#pNo').onclick=()=>d.close(); $('#pOk').onclick=()=>{ok=true;d.close()}; d.showModal()});
+  if(!yes)return;
+  try{const a=await api('/api/mod/deps',{id,add:r.missing.map(d=>({src:d.src,id:d.id}))});await load();toast(t('dep_added',{names:a.added.join(', ')}));
+    for(const nid of a.new_ids||[])await fdDeps(nid,'',depth+1)}catch(x){alert(x.message)}}
 
 // --- lists
 $('#bList').onclick=()=>saveListDialog();

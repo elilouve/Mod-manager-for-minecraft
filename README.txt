@@ -57,7 +57,7 @@ and fills in links, icon, description, loaders and versions.
 Result per mod: Found / To check (uncertain match) / Not found.
 When both sites know a mod, both links are stored. Unless unticked, the scan also reads
 the required dependencies of every scanned mod: those already in the database are linked,
-missing ones are listed for confirmation, then added (with both links when available) and linked.
+missing ones are listed for confirmation, then added (and themselves analysed for further dependencies) (with both links when available) and linked.
 Options: only unscanned mods, retry unresolved mods, selection, or all mods.
 The ↻ button on a row (or "Refresh" for a selection) re-checks mods after a link is
 edited. If a mod stays "Not found", add its link manually (edit button).

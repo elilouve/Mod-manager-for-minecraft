@@ -848,74 +848,126 @@ def scan_worker(job, ids, rename=True, with_deps=True):
         scan_dependencies(job, ids)
 
 
+def create_dep_mod(inf):
+    """Creates (or reuses) the database entry of a dependency described by an info dict. Returns the mod."""
+    dm = find_by_ref(inf["src"], inf["id"]) or find_by_slug(inf["src"], inf["slug"])
+    if dm:
+        return dm, False
+    d = {"name": inf["title"], "category": dep_category(), "scan_status": "ok", "loaders": inf["loaders"],
+         "versions": inf["versions"], "icon_url": inf["icon"], "description": inf["description"]}
+    d.update({"modrinth_id": inf["id"], "modrinth_slug": inf["slug"]} if inf["src"] == "modrinth"
+             else {"curseforge_id": inf["id"], "curseforge_slug": inf["slug"]})
+    did = save_mod(d)
+    try:
+        scan_mod(did, rename=False)
+    except ApiError:
+        pass
+    return get_mod(did), True
+
+
+def mod_dependencies(mid, add=None):
+    """Links the required dependencies already in the database; returns the missing ones.
+    With add=[{src,id}], creates those and links them too."""
+    m = get_mod(mid)
+    if not m:
+        raise ApiError(tr("no_mod_at_link"))
+    if add is not None:
+        names, new_ids = [], []
+        for a in add:
+            key = (a["src"], str(a["id"]))
+            inf = DEP_CACHE.get(key) or (mr_project(a["id"]) if a["src"] == "modrinth" else cf_mod(a["id"]))
+            if not inf:
+                continue
+            dm, new = create_dep_mod(inf)
+            add_link(mid, dm["id"])
+            names.append(dm["name"])
+            if new:
+                new_ids.append(dm["id"])
+        return {"added": names, "new_ids": new_ids}
+    if m["modrinth_id"]:
+        info = {"src": "modrinth", "id": m["modrinth_id"]}
+    elif m["curseforge_id"] and load_cfg().get("curseforge_key"):
+        info = {"src": "curseforge", "id": m["curseforge_id"]}
+    else:
+        return {"linked": [], "missing": []}
+    linked, missing = [], []
+    for d in lookup_deps(info):
+        if d["mod_id"]:
+            if add_link(mid, d["mod_id"]):
+                linked.append(d["db_name"])
+        else:
+            missing.append({k: d.get(k) for k in ("src", "id", "slug", "title", "description", "icon")})
+    return {"linked": linked, "missing": missing}
+
+
 def scan_dependencies(job, ids):
     """Second phase of the scan: reads the required dependencies of every scanned mod, links the ones
-    already in the database and offers to add the missing ones."""
+    already in the database and offers to add the missing ones. Mods added this way are analysed in
+    turn (their own dependencies), until nothing new appears."""
     DEP_CACHE.clear()
     has_key = bool(load_cfg().get("curseforge_key")) and not CF_STATE["blocked"]
-    job.total, job.done = len(ids), 0
-    linked, pending = 0, {}
-    for n, mid in enumerate(ids):
+    job.result["deps_linked"], job.result["deps_added"] = 0, []
+    declined, seen = set(), set()
+    queue = list(ids)
+    for _round in range(8):
+        queue = [i for i in queue if i not in seen]
+        if not queue:
+            return
+        seen.update(queue)
+        job.total, job.done = len(queue), 0
+        pending = {}
+        for n, mid in enumerate(queue):
+            if job.cancel:
+                return
+            job.done = n + 1
+            m = get_mod(mid)
+            if not m:
+                continue
+            job.message = tr("sc_deps_read", name=m["name"])
+            if m["modrinth_id"]:
+                info = {"src": "modrinth", "id": m["modrinth_id"]}
+            elif m["curseforge_id"] and has_key:
+                info = {"src": "curseforge", "id": m["curseforge_id"]}
+            else:
+                continue
+            try:
+                deps = lookup_deps(info, with_other=False)
+            except ApiError as e:
+                if e.kind in ("conn", "denied"):
+                    return
+                continue
+            for d in deps:
+                if d["mod_id"]:
+                    job.result["deps_linked"] += add_link(mid, d["mod_id"])
+                else:
+                    key = "%s:%s" % (d["src"], d["id"])
+                    if key in declined:
+                        continue
+                    pending.setdefault(key, {"info": d, "by": []})["by"].append(mid)
+            time.sleep(THROTTLE)
+        if not pending:
+            return
+        job.ask = {"deps": [{"key": k, "name": c["info"]["title"], "known": False,
+                             "required_by": sorted({get_mod(i)["name"] for i in c["by"] if get_mod(i)})}
+                            for k, c in pending.items()]}
+        job.event.clear()
+        job.state = "need_deps"
+        job.event.wait()
         if job.cancel:
             return
-        job.done = n + 1
-        m = get_mod(mid)
-        if not m:
-            continue
-        job.message = tr("sc_deps_read", name=m["name"])
-        if m["modrinth_id"]:
-            info = {"src": "modrinth", "id": m["modrinth_id"]}
-        elif m["curseforge_id"] and has_key:
-            info = {"src": "curseforge", "id": m["curseforge_id"]}
-        else:
-            continue
-        try:
-            deps = lookup_deps(info, with_other=False)
-        except ApiError as e:
-            if e.kind in ("conn", "denied"):
-                break
-            continue
-        for d in deps:
-            if d["mod_id"]:
-                linked += add_link(mid, d["mod_id"])
-            else:
-                c = pending.setdefault("%s:%s" % (d["src"], d["id"]), {"info": d, "by": []})
-                c["by"].append(mid)
-        time.sleep(THROTTLE)
-    job.result["deps_linked"] = linked
-    job.result["deps_added"] = []
-    if not pending:
-        return
-    job.ask = {"deps": [{"key": k, "name": c["info"]["title"], "known": False,
-                         "required_by": sorted({get_mod(i)["name"] for i in c["by"] if get_mod(i)})}
-                        for k, c in pending.items()]}
-    job.event.clear()
-    job.state = "need_deps"
-    job.event.wait()
-    if job.cancel:
-        return
-    job.state, job.ask = "running", None
-    accepted = set(job.answer or [])
-    for k, c in pending.items():
-        if k not in accepted:
-            continue
-        inf = c["info"]
-        dm = find_by_ref(inf["src"], inf["id"]) or find_by_slug(inf["src"], inf["slug"])
-        if not dm:
-            d = {"name": inf["title"], "category": dep_category(), "scan_status": "ok", "loaders": inf["loaders"],
-                 "versions": inf["versions"], "icon_url": inf["icon"], "description": inf["description"]}
-            d.update({"modrinth_id": inf["id"], "modrinth_slug": inf["slug"]} if inf["src"] == "modrinth"
-                     else {"curseforge_id": inf["id"], "curseforge_slug": inf["slug"]})
-            did = save_mod(d)
-            try:
-                scan_mod(did, rename=False)
-            except ApiError:
-                pass
-            dm = get_mod(did)
-            job.result["deps_added"].append(dm["name"])
-        for mid in c["by"]:
-            linked += add_link(mid, dm["id"])
-    job.result["deps_linked"] = linked
+        job.state, job.ask = "running", None
+        accepted = set(job.answer or [])
+        queue = []
+        for k, c in pending.items():
+            if k not in accepted:
+                declined.add(k)
+                continue
+            dm, new = create_dep_mod(c["info"])
+            if new:
+                job.result["deps_added"].append(dm["name"])
+                queue.append(dm["id"])  # its own dependencies are analysed in the next round
+            for mid in c["by"]:
+                job.result["deps_linked"] += add_link(mid, dm["id"])
 
 
 # ----------------------------------------------------------------------------
@@ -1522,6 +1574,8 @@ class Handler(BaseHTTPRequestHandler):
             return import_lists_text(d["text"])
         if path == "/api/lookup":
             return lookup_url(d.get("url"))
+        if path == "/api/mod/deps":
+            return mod_dependencies(d["id"], d.get("add"))
         if path == "/api/search":
             text = (d.get("q") or "").strip()
             return {"results": search_catalog(text) if len(text) >= 2 else []}
