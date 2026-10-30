@@ -586,6 +586,64 @@ def name_variants(m, known):
     return out
 
 
+def find_duplicates(only=None):
+    """Groups of mods that look like the same mod: same Modrinth/CurseForge id or slug, or same
+    normalised name. With only=<set of ids>, only the groups containing one of them."""
+    c = db()
+    rows = c.execute("SELECT * FROM mods").fetchall()
+    c.close()
+    parent = {r["id"]: r["id"] for r in rows}
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    seen = {}
+    for r in rows:
+        keys = [("mi", r["modrinth_id"]), ("ms", r["modrinth_slug"]), ("ci", r["curseforge_id"]),
+                ("cs", r["curseforge_slug"]), ("n", norm(r["name"]) if len(norm(r["name"])) >= 3 else None)]
+        for k in keys:
+            if not k[1]:
+                continue
+            if k in seen:
+                parent[find(r["id"])] = find(seen[k])
+            else:
+                seen[k] = r["id"]
+    groups = {}
+    for r in rows:
+        groups.setdefault(find(r["id"]), []).append(mod_dict(r))
+    out = [g for g in groups.values() if len(g) > 1 and (not only or any(m["id"] in only for m in g))]
+    return sorted(out, key=lambda g: g[0]["name"].lower())
+
+
+def merge_mods(keep, remove):
+    """Keeps one entry, completes it with what the other one knows, moves links and lists, deletes the other."""
+    k, r = get_mod(keep), get_mod(remove)
+    if not k or not r or keep == remove:
+        raise ApiError(tr("no_mod_at_link"))
+    upd = {}
+    for f in ("category", "icon_url", "description", "notes", "modrinth_id", "modrinth_slug",
+              "curseforge_id", "curseforge_slug"):
+        if not k[f] and r[f]:
+            upd[f] = r[f]
+    for f in ("loaders", "versions"):
+        both = list(dict.fromkeys(list(k[f]) + list(r[f])))
+        if both != list(k[f]):
+            upd[f] = ",".join(both)
+    if upd:
+        update_mod(keep, **upd)
+    c = db()
+    c.execute("UPDATE OR IGNORE links SET mod_id=? WHERE mod_id=?", (keep, remove))
+    c.execute("UPDATE OR IGNORE links SET dep_id=? WHERE dep_id=?", (keep, remove))
+    c.execute("DELETE FROM links WHERE mod_id=dep_id")
+    c.execute("UPDATE OR IGNORE list_mods SET mod_id=? WHERE mod_id=?", (keep, remove))
+    c.execute("DELETE FROM mods WHERE id=?", (remove,))
+    c.commit()
+    c.close()
+
+
 def scan_curseforge(m, known=()):
     cf, s_cf = None, 0.0
     if m["curseforge_id"]:
@@ -1574,6 +1632,12 @@ class Handler(BaseHTTPRequestHandler):
             return import_lists_text(d["text"])
         if path == "/api/lookup":
             return lookup_url(d.get("url"))
+        if path == "/api/duplicates":
+            only = set(d["ids"]) if d.get("ids") else None
+            return {"groups": find_duplicates(only)}
+        if path == "/api/merge":
+            merge_mods(d["keep"], d["remove"])
+            return {"ok": True}
         if path == "/api/mod/deps":
             return mod_dependencies(d["id"], d.get("add"))
         if path == "/api/search":

@@ -63,6 +63,12 @@ Le bouton ↻ d'une ligne (ou "Actualiser" pour une selection) relance la verifi
 apres modification d'un lien. Si un mod reste "Introuvable", renseigner son lien
 manuellement (bouton de modification).
 
+Doublons : apres un ajout, une modification, une actualisation ou une analyse, les entrees qui
+semblent etre le meme mod (meme lien Modrinth/CurseForge ou meme nom) sont signalees. En garder
+une : elle est completee avec les donnees, liens et listes de l'autre, qui est supprimee.
+« Garder les deux » est memorise. Cette verification utilise uniquement la base locale et
+n'ajoute aucune attente.
+
 6. Telechargement
 -----------------
 Selectionner les mods, cliquer sur "Telecharger (zip)", choisir la version Minecraft,

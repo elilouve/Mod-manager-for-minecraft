@@ -195,6 +195,7 @@ input.menu{width:150px;font-weight:600}
   <div><button id="cAdd" type="button" data-i="cd_add"></button></div>
 </div><div class="df"><button id="cCancel" data-i="cancel"></button><button class="primary" id="cSave" data-i="save"></button></div></dialog>
 
+<dialog id="dDup"><div class="dh" data-i="dup_title"></div><div class="db" id="dupBody"></div><div class="df" id="dupFoot"></div></dialog>
 <dialog id="dFind"><div class="dh" data-i="fd_title"></div><div class="db">
   <div class="row" style="flex:none"><input id="fdQ" data-ph="fd_ph" style="flex:1"><button class="primary" id="fdGo" style="flex:none" data-i="fd_go"></button></div>
   <div id="fdRes" style="display:flex;flex-direction:column;gap:6px"></div>
@@ -207,7 +208,7 @@ input.menu{width:150px;font-weight:600}
 <script>
 const I18N={
 en:{
-app_title:`Mod Manager`,find_mod:`🔎 Search mods`,fd_title:`Search mods online`,fd_ph:`Mod name…`,fd_go:`Search`,fd_none:`No result.`,fd_in:`✓ in database`,fd_add:`Add`,fd_added:`Added: {name}`,fd_hint:`Results come from the Modrinth and CurseForge APIs (CurseForge needs an API key). Adding runs the usual online check, which also looks for the other site's link, then handles required dependencies.`,add_mod:`+ Add mod`,scan_online:`🔍 Scan online`,import_csv:`Import CSV`,export_csv:`Export CSV`,lists_menu:`📋 Lists`,lists_menu_t:`Saved lists`,settings:`⚙ Settings`,
+app_title:`Mod Manager`,dup_title:`Possible duplicates`,dup_text:`These entries look like the same mod ({i}/{n}). Keep one of them?`,dup_keep:`Keep this one`,dup_both:`Keep both`,dup_merged:`Merged: kept {name}`,dup_hint:`The kept entry is completed with the other one's data, links and lists; the other is deleted.`,dup_cat:`Category`,dup_none:`none`,find_mod:`🔎 Search mods`,fd_title:`Search mods online`,fd_ph:`Mod name…`,fd_go:`Search`,fd_none:`No result.`,fd_in:`✓ in database`,fd_add:`Add`,fd_added:`Added: {name}`,fd_hint:`Results come from the Modrinth and CurseForge APIs (CurseForge needs an API key). Adding runs the usual online check, which also looks for the other site's link, then handles required dependencies.`,add_mod:`+ Add mod`,scan_online:`🔍 Scan online`,import_csv:`Import CSV`,export_csv:`Export CSV`,lists_menu:`📋 Lists`,lists_menu_t:`Saved lists`,settings:`⚙ Settings`,
 h_lists:`Lists`,h_loader:`Loader`,h_version:`Minecraft version`,h_online:`Online data`,h_cats:`Categories`,manage:`✎ manage`,all_mods:`All mods`,all_m:`All`,all_f:`All`,
 sc_ok:`✓ Verified`,sc_warn:`⚠ To review`,sc_bad:`✕ Not found`,sc_none:`Not scanned yet`,st_ok:`✓ verified`,st_warn:`⚠ to review`,st_bad:`✕ not found`,
 search_ph:`Search (name, category, description)…`,count:`{n} shown of {total}`,selected:`{n} selected`,b_download:`⬇ Download (zip)…`,b_refresh:`↻ Refresh`,
@@ -253,7 +254,7 @@ res_ok:`✓ <b>{n} mod(s)</b> downloaded to:`,res_none:`No mod could be download
 res_fail:`✕ <b>{n} to download manually</b> (a clickable summary is saved next to the zip):`,link_page:`Mod page`,link_files:`Files`,open_rep:`Open summary`,open_dir:`Open folder`,
 dl_cancelled:`Download cancelled.`,load_err:`Loading error: {e}`},
 fr:{
-app_title:`Gestionnaire de mods`,find_mod:`🔎 Rechercher des mods`,fd_title:`Rechercher des mods en ligne`,fd_ph:`Nom du mod…`,fd_go:`Rechercher`,fd_none:`Aucun résultat.`,fd_in:`✓ dans la base`,fd_add:`Ajouter`,fd_added:`Ajouté : {name}`,fd_hint:`Les résultats proviennent des API Modrinth et CurseForge (CurseForge nécessite une clé API). L’ajout lance la vérification en ligne habituelle, qui cherche aussi le lien de l’autre site, puis traite les dépendances requises.`,add_mod:`+ Ajouter un mod`,scan_online:`🔍 Analyser en ligne`,import_csv:`Importer un CSV`,export_csv:`Exporter en CSV`,lists_menu:`📋 Listes`,lists_menu_t:`Listes enregistrées`,settings:`⚙ Paramètres`,
+app_title:`Gestionnaire de mods`,dup_title:`Doublons possibles`,dup_text:`Ces entrées semblent être le même mod ({i}/{n}). En garder une seule ?`,dup_keep:`Garder celle-ci`,dup_both:`Garder les deux`,dup_merged:`Fusionné : {name} conservé`,dup_hint:`L’entrée conservée est complétée avec les données, liens et listes de l’autre ; l’autre est supprimée.`,dup_cat:`Catégorie`,dup_none:`aucune`,find_mod:`🔎 Rechercher des mods`,fd_title:`Rechercher des mods en ligne`,fd_ph:`Nom du mod…`,fd_go:`Rechercher`,fd_none:`Aucun résultat.`,fd_in:`✓ dans la base`,fd_add:`Ajouter`,fd_added:`Ajouté : {name}`,fd_hint:`Les résultats proviennent des API Modrinth et CurseForge (CurseForge nécessite une clé API). L’ajout lance la vérification en ligne habituelle, qui cherche aussi le lien de l’autre site, puis traite les dépendances requises.`,add_mod:`+ Ajouter un mod`,scan_online:`🔍 Analyser en ligne`,import_csv:`Importer un CSV`,export_csv:`Exporter en CSV`,lists_menu:`📋 Listes`,lists_menu_t:`Listes enregistrées`,settings:`⚙ Paramètres`,
 h_lists:`Listes`,h_loader:`Loader`,h_version:`Version de Minecraft`,h_online:`Données en ligne`,h_cats:`Catégories`,manage:`✎ gérer`,all_mods:`Tous les mods`,all_m:`Tous`,all_f:`Toutes`,
 sc_ok:`✓ Vérifiés`,sc_warn:`⚠ À vérifier`,sc_bad:`✕ Introuvables`,sc_none:`Pas encore analysés`,st_ok:`✓ vérifié`,st_warn:`⚠ à vérifier`,st_bad:`✕ introuvable`,
 search_ph:`Rechercher (nom, catégorie, description)…`,count:`{n} affiché(s) sur {total}`,selected:`{n} sélectionné(s)`,b_download:`⬇ Télécharger (zip)…`,b_refresh:`↻ Actualiser`,
@@ -460,9 +461,32 @@ $('#bRef').onclick=()=>refreshIds([...sel]);
 async function refreshIds(ids,btn){
   const old=btn?.textContent; if(btn){btn.disabled=true;btn.textContent='…'} toast(t('refreshing',{n:ids.length}));
   try{const job=await api('/api/scan',{ids,rename:false});const j=await poll(job.id,()=>{});await load();const r=j.result||{};
-    toast(j.state==='error'?('✕ '+j.message):t('refreshed',{ok:r.ok||0,w:r['à vérifier']||0,b:r['introuvable']||0}))}
+    toast(j.state==='error'?('✕ '+j.message):t('refreshed',{ok:r.ok||0,w:r['à vérifier']||0,b:r['introuvable']||0}));await checkDups(ids)}
   catch(x){alert(x.message)}
   finally{if(btn){btn.disabled=false;btn.textContent=old}}}
+
+// --- duplicates: asked after an add, an edit, a refresh or a scan
+const dupOk=new Set((()=>{try{return JSON.parse(store.get('gm_dupok')||'[]')}catch(e){return[]}})());
+const dupKey=g=>g.map(m=>m.id).sort((a,b)=>a-b).join('-');
+async function checkDups(ids){
+  let groups; try{groups=(await api('/api/duplicates',{ids:ids&&ids.length?ids:undefined})).groups}catch(x){return}
+  groups=groups.filter(g=>!dupOk.has(dupKey(g)));
+  for(let n=0;n<groups.length;n++){
+    const g=groups[n], keep=await new Promise(res=>{
+      $('#dupBody').innerHTML=`<p style="margin:0">${esc(t('dup_text',{i:n+1,n:groups.length}))}</p>`+g.map(m=>`<div class="fail" style="flex-direction:row;align-items:center;gap:10px">
+        <span style="flex:1;min-width:0"><b>${esc(m.name)}</b><br><small>${t('dup_cat')} : ${esc(m.category||t('dup_none'))} · ${m.loaders.map(l=>LABEL[l]||l).join(', ')||'?'} · ${m.versions.slice(0,4).join(', ')}<br>${esc(m.mr_url||'')} ${esc(m.cf_url||'')}</small></span>
+        <button class="primary" data-keep="${m.id}">${t('dup_keep')}</button></div>`).join('')+`<p class="hint" style="margin:0">${esc(t('dup_hint'))}</p>`;
+      $('#dupFoot').innerHTML=`<button id="dupBoth">${t('dup_both')}</button>`;
+      const d=$('#dDup'); let v=null; d.onclose=()=>{d.onclose=null;res(v)};
+      $('#dupBody').onclick=e=>{const b=e.target.closest('[data-keep]');if(b){v=+b.dataset.keep;d.close()}};
+      $('#dupBoth').onclick=()=>d.close(); d.showModal()});
+    if(keep===null){dupOk.add(dupKey(g));store.set('gm_dupok',JSON.stringify([...dupOk]));continue}
+    for(const m of g)if(m.id!==keep){try{await api('/api/merge',{keep,remove:m.id})}catch(x){alert(x.message)}}
+    toast(t('dup_merged',{name:g.find(m=>m.id===keep).name}));
+  }
+  if(groups.length)await load();
+}
+$('#dDup').addEventListener('cancel',e=>e.preventDefault());
 
 // --- search and quick add
 let fdRes=[];
@@ -484,6 +508,7 @@ $('#fdRes').onclick=async e=>{const b=e.target.closest('button[data-k]');if(!b)r
     r.in_db=r.title;toast(t('fd_added',{name:r.title}));await load();
     const nm=S.mods.find(m=>(r.src==='modrinth'?m.modrinth_slug:m.curseforge_slug)===r.slug);
     if(nm)await fdDeps(nm.id,nm.name);
+    if(nm)await checkDups([nm.id]);
     fdSearch()}catch(x){alert(x.message);b.disabled=false;b.textContent=t('fd_add')}};
 
 async function fdDeps(id,name,depth=0){
@@ -623,6 +648,7 @@ $('#eSave').onclick=async()=>{
   const btn=$('#eSave'); btn.disabled=true; btn.textContent=t('saving');
   try{const r=await api('/api/mod',body);$('#dEdit').close();await load();
     if(depCtx){depCtx.added.push({id:r.id,name});return nextDep()}
+    await checkDups([r.id]);
     toast(r.scan==='ok'?t('saved_ok'):r.scan==='à vérifier'?t('saved_warn'):r.scan==='introuvable'?t('saved_bad'):r.scan_error?t('saved_err',{e:r.scan_error}):t('saved'))}
   catch(x){alert(x.message)}
   finally{btn.disabled=false;btn.textContent=t('save')}};
@@ -703,10 +729,12 @@ $('#bScan').onclick=()=>{
       else if(!asked)$('#scanBody').innerHTML=bar(j.done,j.total,j.message)});
     await load();
     const r=j.result||{};
+    const scanned=v==='sel'?[...sel]:null;
     $('#scanBody').innerHTML=j.state==='error'?`<p style="color:var(--bad)">✕ ${esc(j.message)}</p>`:
       `<p><b>${j.state==='cancelled'?t('sc_stopped'):t('sc_done')}</b></p><p>${t('sc_r_ok',{n:r.ok||0})}<br>${t('sc_r_w',{n:r['à vérifier']||0})}<br>${t('sc_r_b',{n:r['introuvable']||0})}${r['erreur']?`<br>${t('sc_r_e',{n:r['erreur']})}`:''}${r.deps_linked?`<br>${t('sc_r_dl',{n:r.deps_linked})}`:''}${(r.deps_added||[]).length?`<br>${t('sc_r_da',{names:esc(r.deps_added.join(', '))})}`:''}</p>${r.cf_refuse?`<p style="color:var(--warn)">${t('sc_cf_refused')}</p>`:''}
        <p class="hint">${t('sc_tip')}</p>`;
-    $('#scanFoot').innerHTML=`<button class="primary" id="scClose2">${t('close')}</button>`;$('#scClose2').onclick=()=>$('#dScan').close()};
+    $('#scanFoot').innerHTML=`<button class="primary" id="scClose2">${t('close')}</button>`;$('#scClose2').onclick=()=>$('#dScan').close();
+    if(j.state!=='error')checkDups(scanned)};
   $('#dScan').showModal()};
 
 $('#bDl').onclick=()=>{

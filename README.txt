@@ -62,6 +62,11 @@ Options: only unscanned mods, retry unresolved mods, selection, or all mods.
 The ↻ button on a row (or "Refresh" for a selection) re-checks mods after a link is
 edited. If a mod stays "Not found", add its link manually (edit button).
 
+Duplicates: after adding, editing, refreshing or scanning, entries that look like the same mod
+(same Modrinth/CurseForge link or same name) are reported. Keep one: it is completed with the
+other's data, links and lists, and the other is deleted. "Keep both" is remembered.
+This check uses the local database only and adds no waiting time.
+
 6. Downloading
 --------------
 Select mods, click "Download (zip)", choose the Minecraft version, loader and
