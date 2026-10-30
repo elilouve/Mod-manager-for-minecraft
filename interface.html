@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mod Manager</title>
+<script>
+try{const m=localStorage.getItem('gm_mode'),a=localStorage.getItem('gm_acc');
+if(m)document.documentElement.dataset.mode=m;if(a)document.documentElement.style.setProperty('--acc',a)}catch(e){}
+</script>
+<style>
+:root{color-scheme:light dark;--acc:#2f7d46;--acc-ink:#fff;
+--bg:color-mix(in srgb,var(--acc) 4%,#f5f6f5);--panel:#fff;--ink:#1d2420;--mute:#66736b;
+--line:color-mix(in srgb,var(--acc) 9%,#dde1de);--accsoft:color-mix(in srgb,var(--acc) 14%,#fff);
+--acc-fg:color-mix(in srgb,var(--acc) 80%,#000);
+--warn:#b26a00;--warnsoft:#fff1d9;--bad:#b3261e;--badsoft:#fde7e5;--r:8px;
+--st-ok:#17622e;--st-ok-bg:#d9f2e0;--st-w:#8a5300;--st-w-bg:#ffe9bf;--st-b:#a8211a;--st-b-bg:#fbdad7}
+:root[data-mode=light]{color-scheme:light}
+:root[data-mode=dark]{color-scheme:dark;
+--bg:color-mix(in srgb,var(--acc) 6%,#141716);--panel:color-mix(in srgb,var(--acc) 4%,#1d2120);--ink:#e8ece9;--mute:#99a59d;
+--line:color-mix(in srgb,var(--acc) 14%,#2d3330);--accsoft:color-mix(in srgb,var(--acc) 24%,#1d2120);
+--acc-fg:color-mix(in srgb,var(--acc) 60%,#fff);--warn:#f0b24f;--warnsoft:#3a2f17;--bad:#f2928b;--badsoft:#3b1f1d;
+--st-ok:#7fdc9a;--st-ok-bg:#1c3a27;--st-w:#f5c26b;--st-w-bg:#42330f;--st-b:#ff9d95;--st-b-bg:#4a1f1c}
+@media (prefers-color-scheme:dark){:root:not([data-mode=light]):not([data-mode=dark]){
+--bg:color-mix(in srgb,var(--acc) 6%,#141716);--panel:color-mix(in srgb,var(--acc) 4%,#1d2120);--ink:#e8ece9;--mute:#99a59d;
+--line:color-mix(in srgb,var(--acc) 14%,#2d3330);--accsoft:color-mix(in srgb,var(--acc) 24%,#1d2120);
+--acc-fg:color-mix(in srgb,var(--acc) 60%,#fff);--warn:#f0b24f;--warnsoft:#3a2f17;--bad:#f2928b;--badsoft:#3b1f1d;
+--st-ok:#7fdc9a;--st-ok-bg:#1c3a27;--st-w:#f5c26b;--st-w-bg:#42330f;--st-b:#ff9d95;--st-b-bg:#4a1f1c}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;height:100vh;display:flex;flex-direction:column}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--acc)}
+button.primary{background:var(--acc);color:var(--acc-ink);border-color:var(--acc);font-weight:600}
+button.danger{color:var(--bad)}
+button:disabled{opacity:.5;cursor:default}
+input,select,textarea{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:6px 9px;width:100%}
+input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
+input[type=color]{width:44px;height:32px;padding:2px;cursor:pointer}
+textarea{resize:vertical;min-height:60px}
+header{display:flex;gap:8px;align-items:center;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+header h1{font-size:16px;margin:0 12px 0 0}
+header .sp{flex:1}
+header a{color:inherit;text-decoration:none}
+.lbtns{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.lbtns button{padding:3px 9px;font-size:12px;white-space:nowrap}
+.lbtns a{color:inherit;text-decoration:none}
+#app{flex:1;display:flex;min-height:0}
+aside{width:270px;flex:none;overflow:auto;padding:12px;border-right:1px solid var(--line);background:var(--panel)}
+aside h3{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);margin:16px 0 6px}
+aside h3:first-child{margin-top:0}
+.mini{float:right;padding:1px 8px;font-size:11px;text-transform:none;letter-spacing:0}
+.nav{display:flex;justify-content:space-between;gap:6px;padding:5px 8px;border-radius:6px;cursor:pointer}
+.nav:hover{background:var(--bg)}.nav.on{background:var(--accsoft);font-weight:600}
+.nav small{color:var(--mute)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:3px 10px;border:1px solid var(--line);border-radius:99px;cursor:pointer;user-select:none}
+.chip.on{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+main{flex:1;display:flex;flex-direction:column;min-width:0}
+.tools{display:flex;gap:8px;padding:10px 16px;align-items:center}
+.tools input{max-width:360px}
+.count{color:var(--mute)}
+.selbar{display:none;gap:8px;align-items:center;padding:8px 16px;background:var(--accsoft);border-block:1px solid var(--line);flex-wrap:wrap}
+.selbar.show{display:flex}
+.tablewrap{flex:1;overflow:auto;padding:0 16px 16px}
+table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
+th{position:sticky;top:0;background:var(--panel);text-align:left;padding:8px;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap;font-size:12px;color:var(--mute);z-index:1}
+td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:hover td{background:color-mix(in srgb,var(--accsoft) 40%,transparent)}
+.ico{width:30px;height:30px;border-radius:6px;background:var(--bg);display:inline-flex;align-items:center;justify-content:center;color:var(--mute);font-weight:700;overflow:hidden;flex:none}
+.ico img{width:100%;height:100%;object-fit:cover}
+.nm{display:flex;gap:9px;align-items:center;min-width:180px}
+.nm a{color:inherit;font-weight:600;text-decoration:none}.nm a:hover{color:var(--acc-fg);text-decoration:underline}
+.badge{display:inline-block;padding:1px 7px;border-radius:99px;background:var(--bg);border:1px solid var(--line);font-size:12px;margin:1px 2px 1px 0;white-space:nowrap}
+.badge.l{background:var(--accsoft);border-color:transparent}
+.desc{max-width:340px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st{font-size:12px;border-radius:99px;padding:1px 8px;white-space:nowrap}
+.st.ok{background:var(--st-ok-bg);color:var(--st-ok)}.st.w{background:var(--st-w-bg);color:var(--st-w)}
+.st.b{background:var(--st-b-bg);color:var(--st-b)}.st.n{color:var(--mute)}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);padding:0;width:min(640px,94vw);max-height:92vh}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog#dCat{width:min(720px,94vw)}
+.dh{padding:14px 18px;border-bottom:1px solid var(--line);font-weight:700;font-size:15px}
+.db{padding:16px 18px;overflow:auto;max-height:68vh;display:flex;flex-direction:column;gap:12px}
+.df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mute)}
+label.f>span b{color:var(--bad)}
+.row{display:flex;gap:10px}.row>*{flex:1}
+.checks{display:flex;gap:14px;flex-wrap:wrap}.checks label{display:flex;gap:5px;align-items:center;color:var(--ink)}
+.hint{font-size:12px;color:var(--mute)}
+.bar{height:10px;background:var(--bg);border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;background:var(--acc);width:0;transition:width .3s}
+.fail{border:1px solid var(--line);border-radius:var(--r);padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+.fail small{color:var(--mute)}
+.fail a{color:var(--acc-fg)}
+.pill{display:inline-flex;gap:6px;align-items:center;background:var(--accsoft);padding:2px 4px 2px 10px;border-radius:99px;margin:2px 4px 2px 0}
+.pill button{border:0;background:none;padding:0 6px;color:var(--mute)}
+.empty{padding:48px;text-align:center;color:var(--mute)}
+.crow{display:grid;grid-template-columns:1.4fr 1fr 44px 34px;gap:8px;align-items:center}
+.crow.h{font-size:12px;color:var(--mute)}
+.sws{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sw{width:30px;height:30px;border-radius:50%;padding:0;border:2px solid transparent;outline:1px solid var(--line)}
+.sw.on{border-color:var(--panel);outline:2px solid var(--ink)}
+html.pv .tablewrap{visibility:hidden}
+input.cb{cursor:pointer}
+input.cb[readonly]{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%2397a49b' stroke-width='1.6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+input.menu{width:150px;font-weight:600}
+.dd{position:fixed;z-index:2000;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.28);padding:4px}
+.ddi{padding:6px 10px;border-radius:6px;cursor:pointer}.ddi:hover,.ddi.on{background:var(--accsoft)}
+.ddh{padding:6px 10px 2px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute);cursor:default}
+.ddsep{height:1px;background:var(--line);margin:4px 0}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:99px;display:none;z-index:3000}
+</style>
+</head>
+<body>
+<header>
+  <h1>⛏ <span data-i="app_title"></span></h1>
+  <button class="primary" id="bAdd" data-i="add_mod"></button>
+  <button id="bFind" data-i="find_mod"></button>
+  <button id="bScan" data-i="scan_online"></button>
+  <button id="bImport" data-i="import_csv"></button>
+  <a href="/api/export.csv" download><button type="button" data-i="export_csv"></button></a>
+  <input id="mLists" class="menu" data-ti="lists_menu_t">
+  <span class="sp"></span>
+  <button id="bSet" data-i="settings"></button>
+  <input type="file" id="file" accept=".csv,.txt" hidden>
+  <input type="file" id="fileL" accept=".json" hidden>
+</header>
+<div id="app">
+  <aside>
+    <h3 data-i="h_lists"></h3><div id="lists"></div>
+    <h3 data-i="h_loader"></h3><div class="chips" id="loaders"></div>
+    <h3 data-i="h_version"></h3><input id="fVer" class="cb">
+    <h3 data-i="h_online"></h3><input id="fScan" class="cb">
+    <h3><span data-i="h_cats"></span> <button class="mini" id="bCats" data-i="manage"></button></h3><div id="cats"></div>
+  </aside>
+  <main>
+    <div class="tools"><input id="q" type="search" data-ph="search_ph"><span class="count" id="count"></span></div>
+    <div class="selbar" id="selbar">
+      <b id="selN"></b>
+      <button class="primary" id="bDl" data-i="b_download"></button>
+      <button id="bRef" data-i="b_refresh" data-ti="b_refresh_t"></button>
+      <button id="bList" data-i="b_list"></button>
+      <button id="bCat" data-i="b_cat"></button>
+      <button id="bAll" data-i="b_selall"></button>
+      <button id="bNone" data-i="b_none"></button>
+      <button class="danger" id="bDel" data-i="b_delete"></button>
+    </div>
+    <div class="tablewrap"><table><thead><tr id="thead"></tr></thead><tbody id="tbody"></tbody></table><div class="empty" id="empty" hidden></div></div>
+  </main>
+</div>
+<div id="toast"></div>
+
+<dialog id="dEdit"><div class="dh" id="eTitle"></div><div class="db">
+  <label class="f"><span><span data-i="f_name"></span> <b>*</b></span><input id="eName"></label>
+  <div class="row">
+    <label class="f"><span data-i="f_mr"></span><input id="eMr" placeholder="https://modrinth.com/mod/..."></label>
+    <label class="f"><span data-i="f_cf"></span><input id="eCf" placeholder="https://www.curseforge.com/minecraft/mc-mods/..."></label>
+  </div>
+  <div><button id="eLook" type="button" data-i="e_look"></button> <span class="hint" id="eLookMsg"></span></div>
+  <div class="row">
+    <label class="f"><span data-i="f_cat"></span><input id="eCat"></label>
+    <label class="f"><span data-i="f_icon"></span><input id="eIcon"></label>
+  </div>
+  <label class="f"><span data-i="f_loaders"></span></label>
+  <div class="checks" id="eLoaders"></div>
+  <label class="f"><span data-i="f_versions"></span><input id="eVers" placeholder="1.20.1, 1.21.1"></label>
+  <label class="f"><span data-i="f_desc"></span><textarea id="eDesc"></textarea></label>
+  <label class="f"><span data-i="f_notes"></span><textarea id="eNotes" style="min-height:40px"></textarea></label>
+  <label class="f"><span data-i="f_deps"></span><input id="eDepIn" data-ph="dep_ph"></label>
+  <div id="eDeps"></div>
+</div><div class="df"><button id="eDel" class="danger" style="margin-right:auto" data-i="b_delete"></button>
+  <button id="eCancel" data-i="cancel"></button><button class="primary" id="eSave" data-i="save"></button></div></dialog>
+
+<dialog id="dSet"><div class="dh" data-i="s_title"></div><div class="db">
+  <label class="f"><span data-i="s_key"></span><input id="sKey" type="password" autocomplete="off"></label>
+  <div><button id="sTest" type="button" data-i="s_test"></button> <span class="hint" id="sTestMsg"></span></div>
+  <label class="f"><span data-i="s_out"></span><input id="sOut"></label>
+  <label class="f"><span data-i="s_tracked"></span><input id="sVers"></label>
+  <div><button id="sCats" type="button" data-i="s_cats"></button> <span class="hint" data-i="s_cats_h"></span></div>
+  <div><button id="sReset" type="button" class="danger" data-i="s_reset"></button> <span class="hint" data-i="s_reset_h"></span></div>
+  <div class="dh" style="padding:10px 0 0;border:0;font-size:13px" data-i="s_appearance"></div>
+  <div class="row">
+    <label class="f"><span data-i="s_lang"></span><input id="sLang" class="cb"></label>
+    <label class="f"><span data-i="s_mode"></span><input id="sMode" class="cb"></label>
+  </div>
+  <div class="f" style="font-size:13px;color:var(--mute)" data-i="s_accent"></div>
+  <div class="sws" id="sSw"></div>
+  <div class="sws"><input type="color" id="sColor"><span class="hint" data-i="s_custom"></span></div>
+</div><div class="df"><button id="sCancel" data-i="cancel"></button><button class="primary" id="sSave" data-i="save"></button></div></dialog>
+
+<dialog id="dCat"><div class="dh" data-i="cd_title"></div><div class="db">
+  <p class="hint" data-ih="cd_help" style="margin:0"></p>
+  <div class="crow h"><span data-i="cd_name"></span><span data-i="cd_tag"></span><span data-i="cd_mods"></span><span></span></div>
+  <div id="cRows" style="display:flex;flex-direction:column;gap:6px"></div>
+  <div><button id="cAdd" type="button" data-i="cd_add"></button></div>
+</div><div class="df"><button id="cCancel" data-i="cancel"></button><button class="primary" id="cSave" data-i="save"></button></div></dialog>
+
+<dialog id="dFind"><div class="dh" data-i="fd_title"></div><div class="db">
+  <div class="row" style="flex:none"><input id="fdQ" data-ph="fd_ph" style="flex:1"><button class="primary" id="fdGo" style="flex:none" data-i="fd_go"></button></div>
+  <div id="fdRes" style="display:flex;flex-direction:column;gap:6px"></div>
+  <p class="hint" style="margin:0" data-i="fd_hint"></p>
+</div><div class="df"><button id="fdClose" data-i="close"></button></div></dialog>
+<dialog id="dScan"><div class="dh" data-i="sc_title"></div><div class="db" id="scanBody"></div><div class="df" id="scanFoot"></div></dialog>
+<dialog id="dDl"><div class="dh" id="dlTitle"></div><div class="db" id="dlBody"></div><div class="df" id="dlFoot"></div></dialog>
+<dialog id="dPick"><div class="dh" id="pTitle"></div><div class="db" id="pBody"></div><div class="df" id="pFoot"></div></dialog>
+
+<script>
+const I18N={
+en:{
+app_title:`Mod Manager`,find_mod:`🔎 Search mods`,fd_title:`Search mods online`,fd_ph:`Mod name…`,fd_go:`Search`,fd_none:`No result.`,fd_in:`✓ in database`,fd_add:`Add`,fd_added:`Added: {name}`,fd_hint:`Results come from the Modrinth and CurseForge APIs (CurseForge needs an API key). Adding runs the usual online check, which also looks for the other site's link.`,add_mod:`+ Add mod`,scan_online:`🔍 Scan online`,import_csv:`Import CSV`,export_csv:`Export CSV`,lists_menu:`📋 Lists`,lists_menu_t:`Saved lists`,settings:`⚙ Settings`,
+h_lists:`Lists`,h_loader:`Loader`,h_version:`Minecraft version`,h_online:`Online data`,h_cats:`Categories`,manage:`✎ manage`,all_mods:`All mods`,all_m:`All`,all_f:`All`,
+sc_ok:`✓ Verified`,sc_warn:`⚠ To review`,sc_bad:`✕ Not found`,sc_none:`Not scanned yet`,st_ok:`✓ verified`,st_warn:`⚠ to review`,st_bad:`✕ not found`,
+search_ph:`Search (name, category, description)…`,count:`{n} shown of {total}`,selected:`{n} selected`,b_download:`⬇ Download (zip)…`,b_refresh:`↻ Refresh`,
+b_refresh_t:`Query Modrinth/CurseForge again for these mods`,b_list:`+ List…`,b_cat:`Category…`,b_selall:`Select all (shown)`,b_none:`None`,b_delete:`Delete`,
+th_mod:`Mod`,th_cat:`Category`,th_loaders:`Loaders`,th_versions:`Versions`,th_desc:`Description`,th_data:`Online data`,
+empty_f:`No mods match the filters.`,empty_db:`The database is empty: import a CSV or add a mod.`,row_refresh:`Refresh from Modrinth/CurseForge`,row_edit:`Edit`,none_cat:`(no category)`,tag_title:`Tag: {tag}`,
+e_add:`Add mod`,e_edit:`Edit mod`,f_name:`Name`,f_mr:`Modrinth link`,f_cf:`CurseForge link`,e_look:`✨ Fill in automatically from the link`,f_cat:`Category`,
+f_icon:`Icon (image URL, optional)`,f_loaders:`Supported loaders`,f_versions:`Minecraft versions (comma-separated)`,f_desc:`Description (optional)`,f_notes:`Personal notes`,
+f_deps:`Dependencies to suggest with this mod (useful when the sites do not list them)`,dep_ph:`Type or choose a mod from the database`,cancel:`Cancel`,save:`Save`,close:`Close`,stop:`Stop`,
+saving:`Retrieving info…`,look_first:`Paste a link first.`,looking:`Searching…`,look_ok:`✓ Info retrieved`,dep_cat_default:`Libraries & APIs`,dep_linked:`✓ Required dependencies linked: {names}`,dep_nodeps:`No required dependency found.`,
+dep_m_title:`Required dependencies missing from the database`,dep_m_text:`This mod requires the following mods, which are not in the database yet:`,
+dep_m_q:`Add them now? Each one opens the Add mod window, pre-filled, to review and confirm. The current form is restored afterwards.`,dep_yes:`Add them`,dep_no:`Skip`,
+dep_add_title:`Add dependency {i}/{n}: {name}`,dep_added:`✓ Dependencies added and linked: {names}`,dep_skipped:`Dependency skipped: {name}`,name_required:`The name is required.`,
+saved_ok:`✓ Mod saved, info updated online`,saved_warn:`⚠ Saved, but the online match needs review`,saved_bad:`✕ Saved, but not found online: check the link`,saved_err:`Saved (online update not possible: {e})`,saved:`Mod saved`,
+confirm_del1:`Remove this mod from the database?`,confirm_deln:`Permanently remove {n} mod(s) from the database?`,
+imported:`{added} mod(s) added, {skipped} already present (skipped)`,
+ls_head:`Saved lists (click to select their mods)`,ls_none:`— no list yet —`,ls_save:`+ Save the selection as a list…`,ls_export:`⬇ Export all lists (file)`,ls_import:`⬆ Import lists (file)…`,ls_all:`Show all mods`,
+ls_selected:`“{name}”: {n} mod(s) selected`,ls_imported:`{lists} list(s) imported`,ls_created:`, {n} mod(s) added to the database (to be scanned)`,
+ls_pick_first:`Select some mods in the table first, then save them as a list.`,ls_pick_title:`Add the selection to a list`,ls_existing:`Add to an existing list`,ls_new_opt:`— new list —`,
+ls_newname:`Name of the new list`,ls_newname_ph:`e.g. Tech, Light survival…`,ls_name_req:`A name is required for the new list.`,ls_saved:`List saved`,
+ls_rename:`Rename`,ls_replace:`Replace with selection`,ls_file:`⬇ List file`,ls_del_t:`Delete the list`,ls_rename_p:`New name:`,ls_replace_none:`Select some mods in the table first.`,
+ls_replace_c:`Replace the content of “{name}” with the {n} selected mods?`,ls_del_c:`Delete the list “{name}”? (the mods stay in the database)`,
+cat_title:`Category of the {n} selected mod(s)`,cat_pick_l:`Choose a category or type a new one (empty = no category)`,apply:`Apply`,
+refreshing:`Refreshing {n} mod(s)…`,refreshed:`Refreshed: ✓ {ok} · ⚠ {w} · ✕ {b}`,
+cd_title:`Categories and tags`,cd_help:`To rename a category, change its name: its mods follow. The optional <b>tag</b> is added in front of file names when downloading if “Add the category tag…” is ticked. Example: tag <code>LIB_</code> gives <code>LIB_sodium-1.0.jar</code>. If the tag ends with a letter or digit, an “_” is added automatically.`,
+cd_name:`Name`,cd_tag:`Tag`,cd_mods:`Mods`,cd_add:`+ Add a category`,cd_name_ph:`Category name`,cd_tag_ph:`e.g. LIB_`,cd_del_t:`Delete this category`,
+cd_del_c:`Delete the category “{name}”? Its {n} mod(s) are not deleted: they become uncategorized.`,cd_dup:`The category “{name}” appears twice.`,cd_saved:`Categories saved`,
+s_title:`Settings`,s_key:`CurseForge API key (free, see README). Modrinth needs no key.`,s_test:`Test key`,s_testing:`Testing…`,s_key_ok:`✓ Valid key`,s_key_bad:`✕ Key rejected`,
+s_reset:`Reset database…`,s_reset_h:`deletes all mods, lists and categories`,s_reset_c:`Delete ALL mods, lists and categories? Settings are kept. This cannot be undone.`,s_out:`Folder for downloaded zip files (preferably not on the system drive)`,s_tracked:`Tracked Minecraft versions (shown in the table)`,s_cats:`🏷 Categories and tags…`,s_cats_h:`add, rename, delete, assign a tag`,
+s_lang:`Language`,s_appearance:`Appearance`,s_mode:`Mode`,m_auto:`Automatic (system)`,m_light:`Light`,m_dark:`Dark`,s_accent:`Theme colour`,s_custom:`Custom colour`,
+th_forest:`Forest`,th_ocean:`Ocean`,th_violet:`Violet`,th_sunset:`Sunset`,th_ruby:`Ruby`,th_teal:`Teal`,th_rose:`Rose`,th_slate:`Slate`,
+sc_title:`Scan Modrinth and CurseForge`,sc_desc:`Each mod is searched on Modrinth{cf} to retrieve its link, icon, description, loaders and versions.`,sc_cf:` and CurseForge`,
+sc_nocf:`CurseForge is not enabled (no API key): see Settings.`,sc_pending:`Mods not scanned yet ({n})`,sc_retry:`Retry ✕ not found and ⚠ to review ({n})`,sc_sel:`The selection ({n})`,
+sc_all:`All mods ({n}): also refreshes data already found`,sc_hint:`About 1 minute for 300 mods. The program stays usable meanwhile.`,sc_start:`Start scan`,
+sc_done:`Scan finished.`,sc_deps_opt:`Also read required dependencies (existing ones are linked, missing ones are offered for adding)`,sd_title:`<b>These required dependencies are not in the database.</b> Add them and link them to the mods that need them?`,sd_ok:`Add checked and finish`,sd_cont:`Adding dependencies…`,sc_r_dl:`🔗 {n} dependency links recorded`,sc_r_da:`＋ Mods added as dependencies: {names}`,sc_stopped:`Scan interrupted.`,sc_r_ok:`✓ {n} found with certainty`,sc_r_w:`⚠ {n} found but to review`,sc_r_b:`✕ {n} not found`,sc_r_e:`Errors: {n}`,
+sc_cf_refused:`⚠ CurseForge refused the key: only Modrinth was used.`,sc_tip:`Use the “Online data” filter on the left to find mods to review or not found; fix them with ✎ by pasting their link.`,
+d_dlg:`Download`,d_title:`Download {n} mod(s)`,d_mc:`Minecraft version`,d_loader:`Loader`,d_from:`Download from:`,d_cf_nokey:`(key missing)`,d_fb:`If a mod is not found there, try the other site`,
+d_tag:`🏷 Add the category tag in front of each file name`,d_notag:`(no tag defined: Settings › Categories and tags)`,d_autodeps:`Add required dependencies automatically (without asking)`,
+d_zip:`Zip name`,d_out:`Destination folder`,d_hint:`Required dependencies (mods that other mods need) are detected. Missing ones are added automatically, or listed for confirmation if the option above is unticked.`,
+d_go:`Start`,d_bad_ver:`Invalid Minecraft version (e.g. 1.21.1).`,d_need_key:`CurseForge requires an API key: add it in Settings first.`,
+deps_title:`<b>These mods are required by the selection.</b> Add them to the download?`,deps_new:`new`,deps_by:`required by: {names}`,deps_none:`None`,deps_ok:`Add checked and continue`,deps_cont:`Continuing the download…`,
+res_ok:`✓ <b>{n} mod(s)</b> downloaded to:`,res_none:`No mod could be downloaded.`,res_tagged:`🏷 {n} file(s) renamed with their category tag.`,res_deps:`<b>{n} dependency(ies) added:</b> {names}`,
+res_fail:`✕ <b>{n} to download manually</b> (a clickable summary is saved next to the zip):`,link_page:`Mod page`,link_files:`Files`,open_rep:`Open summary`,open_dir:`Open folder`,
+dl_cancelled:`Download cancelled.`,load_err:`Loading error: {e}`},
+fr:{
+app_title:`Gestionnaire de mods`,add_mod:`+ Ajouter un mod`,scan_online:`🔍 Analyser en ligne`,import_csv:`Importer un CSV`,export_csv:`Exporter en CSV`,lists_menu:`📋 Listes`,lists_menu_t:`Listes enregistrées`,settings:`⚙ Paramètres`,
+h_lists:`Listes`,h_loader:`Loader`,h_version:`Version de Minecraft`,h_online:`Données en ligne`,h_cats:`Catégories`,manage:`✎ gérer`,all_mods:`Tous les mods`,all_m:`Tous`,all_f:`Toutes`,
+sc_ok:`✓ Vérifiés`,sc_warn:`⚠ À vérifier`,sc_bad:`✕ Introuvables`,sc_none:`Pas encore analysés`,st_ok:`✓ vérifié`,st_warn:`⚠ à vérifier`,st_bad:`✕ introuvable`,
+search_ph:`Rechercher (nom, catégorie, description)…`,count:`{n} affiché(s) sur {total}`,selected:`{n} sélectionné(s)`,b_download:`⬇ Télécharger (zip)…`,b_refresh:`↻ Actualiser`,
+b_refresh_t:`Interroger à nouveau Modrinth/CurseForge pour ces mods`,b_list:`+ Liste…`,b_cat:`Catégorie…`,b_selall:`Tout sélectionner (affichés)`,b_none:`Aucun`,b_delete:`Supprimer`,
+th_mod:`Mod`,th_cat:`Catégorie`,th_loaders:`Loaders`,th_versions:`Versions`,th_desc:`Description`,th_data:`Données en ligne`,
+empty_f:`Aucun mod ne correspond aux filtres.`,empty_db:`La base est vide : importer un CSV ou ajouter un mod.`,row_refresh:`Actualiser depuis Modrinth/CurseForge`,row_edit:`Modifier`,none_cat:`(sans catégorie)`,tag_title:`Tag : {tag}`,
+e_add:`Ajouter un mod`,e_edit:`Modifier le mod`,f_name:`Nom`,f_mr:`Lien Modrinth`,f_cf:`Lien CurseForge`,e_look:`✨ Remplir automatiquement à partir du lien`,f_cat:`Catégorie`,
+f_icon:`Icône (adresse de l’image, facultatif)`,f_loaders:`Loaders pris en charge`,f_versions:`Versions de Minecraft (séparées par des virgules)`,f_desc:`Description (facultatif)`,f_notes:`Notes personnelles`,
+f_deps:`Dépendances à proposer avec ce mod (utile lorsque les sites ne les indiquent pas)`,dep_ph:`Saisir ou choisir un mod de la base`,cancel:`Annuler`,save:`Enregistrer`,close:`Fermer`,stop:`Arrêter`,
+saving:`Récupération des infos…`,look_first:`Coller d’abord un lien.`,looking:`Recherche…`,look_ok:`✓ Infos récupérées`,dep_cat_default:`Bibliothèques et API`,dep_linked:`✓ Dépendances requises liées : {names}`,dep_nodeps:`Aucune dépendance requise trouvée.`,
+dep_m_title:`Dépendances requises absentes de la base`,dep_m_text:`Ce mod requiert les mods suivants, qui ne figurent pas encore dans la base :`,
+dep_m_q:`Les ajouter maintenant ? Chacun ouvre la fenêtre « Ajouter un mod » pré-remplie, à vérifier et valider. Le formulaire en cours est ensuite restauré.`,dep_yes:`Les ajouter`,dep_no:`Ignorer`,
+dep_add_title:`Ajouter la dépendance {i}/{n} : {name}`,dep_added:`✓ Dépendances ajoutées et liées : {names}`,dep_skipped:`Dépendance ignorée : {name}`,name_required:`Le nom est obligatoire.`,
+saved_ok:`✓ Mod enregistré, infos mises à jour en ligne`,saved_warn:`⚠ Enregistré, mais la correspondance en ligne est à vérifier`,saved_bad:`✕ Enregistré, mais introuvable en ligne : vérifier le lien`,saved_err:`Enregistré (mise à jour en ligne impossible : {e})`,saved:`Mod enregistré`,
+confirm_del1:`Supprimer ce mod de la base ?`,confirm_deln:`Supprimer définitivement {n} mod(s) de la base ?`,
+imported:`{added} mod(s) ajouté(s), {skipped} déjà présent(s) ignoré(s)`,
+ls_head:`Listes enregistrées (cliquer pour sélectionner leurs mods)`,ls_none:`— aucune liste pour le moment —`,ls_save:`+ Enregistrer la sélection comme liste…`,ls_export:`⬇ Exporter toutes les listes (fichier)`,ls_import:`⬆ Importer des listes (fichier)…`,ls_all:`Afficher tous les mods`,
+ls_selected:`« {name} » : {n} mod(s) sélectionné(s)`,ls_imported:`{lists} liste(s) importée(s)`,ls_created:`, {n} mod(s) ajouté(s) à la base (à analyser)`,
+ls_pick_first:`Sélectionner d’abord des mods dans le tableau, puis les enregistrer comme liste.`,ls_pick_title:`Ajouter la sélection à une liste`,ls_existing:`Ajouter à une liste existante`,ls_new_opt:`— nouvelle liste —`,
+ls_newname:`Nom de la nouvelle liste`,ls_newname_ph:`ex. Tech, Survie légère…`,ls_name_req:`Un nom est requis pour la nouvelle liste.`,ls_saved:`Liste enregistrée`,
+ls_rename:`Renommer`,ls_replace:`Remplacer par la sélection`,ls_file:`⬇ Fichier de liste`,ls_del_t:`Supprimer la liste`,ls_rename_p:`Nouveau nom :`,ls_replace_none:`Sélectionner d’abord des mods dans le tableau.`,
+ls_replace_c:`Remplacer le contenu de « {name} » par les {n} mods sélectionnés ?`,ls_del_c:`Supprimer la liste « {name} » ? (les mods restent dans la base)`,
+cat_title:`Catégorie des {n} mod(s) sélectionné(s)`,cat_pick_l:`Choisir une catégorie ou en saisir une nouvelle (vide = sans catégorie)`,apply:`Appliquer`,
+refreshing:`Actualisation de {n} mod(s)…`,refreshed:`Actualisé : ✓ {ok} · ⚠ {w} · ✕ {b}`,
+cd_title:`Catégories et tags`,cd_help:`Pour renommer une catégorie, modifier son nom : ses mods suivent. Le <b>tag</b> (facultatif) est ajouté devant le nom des fichiers au téléchargement si « Ajouter le tag de la catégorie… » est coché. Exemple : le tag <code>LIB_</code> donne <code>LIB_sodium-1.0.jar</code>. Si le tag se termine par une lettre ou un chiffre, un « _ » est ajouté automatiquement.`,
+cd_name:`Nom`,cd_tag:`Tag`,cd_mods:`Mods`,cd_add:`+ Ajouter une catégorie`,cd_name_ph:`Nom de la catégorie`,cd_tag_ph:`ex. LIB_`,cd_del_t:`Supprimer cette catégorie`,
+cd_del_c:`Supprimer la catégorie « {name} » ? Ses {n} mod(s) ne sont pas supprimés : ils passent sans catégorie.`,cd_dup:`La catégorie « {name} » apparaît deux fois.`,cd_saved:`Catégories enregistrées`,
+s_title:`Paramètres`,s_key:`Clé d’API CurseForge (gratuite, voir LISEZMOI). Modrinth n’en nécessite pas.`,s_test:`Tester la clé`,s_testing:`Test…`,s_key_ok:`✓ Clé valide`,s_key_bad:`✕ Clé refusée`,
+s_reset:`Réinitialiser la base…`,s_reset_h:`supprime tous les mods, listes et catégories`,s_reset_c:`Supprimer TOUS les mods, listes et catégories ? Les paramètres sont conservés. Action irréversible.`,s_out:`Dossier des zips téléchargés (de préférence hors du disque système)`,s_tracked:`Versions de Minecraft suivies (affichées dans le tableau)`,s_cats:`🏷 Catégories et tags…`,s_cats_h:`ajouter, renommer, supprimer, associer un tag`,
+s_lang:`Langue`,s_appearance:`Apparence`,s_mode:`Mode`,m_auto:`Automatique (système)`,m_light:`Clair`,m_dark:`Sombre`,s_accent:`Couleur du thème`,s_custom:`Couleur personnalisée`,
+th_forest:`Forêt`,th_ocean:`Océan`,th_violet:`Violet`,th_sunset:`Coucher de soleil`,th_ruby:`Rubis`,th_teal:`Turquoise`,th_rose:`Rose`,th_slate:`Ardoise`,
+sc_title:`Analyse sur Modrinth et CurseForge`,sc_desc:`Chaque mod est recherché sur Modrinth{cf} pour récupérer son lien, son icône, sa description, ses loaders et ses versions.`,sc_cf:` et CurseForge`,
+sc_nocf:`CurseForge n’est pas activé (aucune clé d’API) : voir Paramètres.`,sc_pending:`Mods pas encore analysés ({n})`,sc_retry:`Réessayer les ✕ introuvables et ⚠ à vérifier ({n})`,sc_sel:`La sélection ({n})`,
+sc_all:`Tous les mods ({n}) : rafraîchit aussi les données déjà trouvées`,sc_hint:`Compter environ 1 minute pour 300 mods. Le logiciel reste utilisable pendant ce temps.`,sc_start:`Lancer l’analyse`,
+sc_done:`Analyse terminée.`,sc_deps_opt:`Lire aussi les dépendances requises (les existantes sont liées, les absentes sont proposées à l’ajout)`,sd_title:`<b>Ces dépendances requises ne sont pas dans la base.</b> Les ajouter et les lier aux mods qui les requièrent ?`,sd_ok:`Ajouter les cochés et terminer`,sd_cont:`Ajout des dépendances…`,sc_r_dl:`🔗 {n} liens de dépendance enregistrés`,sc_r_da:`＋ Mods ajoutés comme dépendances : {names}`,sc_stopped:`Analyse interrompue.`,sc_r_ok:`✓ {n} trouvés avec certitude`,sc_r_w:`⚠ {n} trouvés mais à vérifier`,sc_r_b:`✕ {n} introuvables`,sc_r_e:`Erreurs : {n}`,
+sc_cf_refused:`⚠ CurseForge a refusé la clé : seul Modrinth a été utilisé.`,sc_tip:`Le filtre « Données en ligne » (à gauche) permet de retrouver les mods à vérifier ou introuvables ; les corriger avec ✎ en collant leur lien.`,
+d_dlg:`Télécharger`,d_title:`Télécharger {n} mod(s)`,d_mc:`Version de Minecraft`,d_loader:`Loader`,d_from:`Télécharger depuis :`,d_cf_nokey:`(clé manquante)`,d_fb:`Si un mod est introuvable, essayer l’autre site`,
+d_tag:`🏷 Ajouter le tag de la catégorie devant le nom de chaque fichier`,d_notag:`(aucun tag défini : Paramètres › Catégories et tags)`,d_autodeps:`Ajouter automatiquement les dépendances requises (sans demander)`,
+d_zip:`Nom du zip`,d_out:`Dossier de destination`,d_hint:`Les dépendances requises (mods nécessaires à d’autres mods) sont détectées. Les dépendances manquantes sont ajoutées automatiquement, ou proposées pour confirmation si l’option ci-dessus est décochée.`,
+d_go:`Lancer`,d_bad_ver:`Version de Minecraft invalide (ex. 1.21.1).`,d_need_key:`CurseForge nécessite une clé d’API : la renseigner d’abord dans les Paramètres.`,
+deps_title:`<b>Ces mods sont requis par la sélection.</b> Les ajouter au téléchargement ?`,deps_new:`nouveau`,deps_by:`requis par : {names}`,deps_none:`Aucun`,deps_ok:`Ajouter les cochés et continuer`,deps_cont:`Suite du téléchargement…`,
+res_ok:`✓ <b>{n} mod(s)</b> téléchargé(s) dans :`,res_none:`Aucun mod n’a pu être téléchargé.`,res_tagged:`🏷 {n} fichier(s) renommé(s) avec le tag de leur catégorie.`,res_deps:`<b>{n} dépendance(s) ajoutée(s) :</b> {names}`,
+res_fail:`✕ <b>{n} à télécharger manuellement</b> (un récapitulatif cliquable est enregistré à côté du zip) :`,link_page:`Page du mod`,link_files:`Fichiers`,open_rep:`Ouvrir le récapitulatif`,open_dir:`Ouvrir le dossier`,
+dl_cancelled:`Téléchargement annulé.`,load_err:`Erreur de chargement : {e}`}
+};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LABEL={forge:'Forge',neoforge:'NeoForge',fabric:'Fabric',quilt:'Quilt'};
+const THEMES=[['forest','#2f7d46'],['ocean','#2563eb'],['violet','#7c3aed'],['sunset','#d97706'],['ruby','#dc2626'],['teal','#0f766e'],['rose','#db2777'],['slate','#475569']];
+let S={mods:[],lists:[],cfg:{},categories:[]};
+let F={q:'',cat:'',list:null,loaders:new Set(),ver:'',scan:''};
+let sort={k:'name',d:1}, sel=new Set(), editing=null, editLinks=[], editIds={};
+const store={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+const lang=()=>(S.cfg.lang||store.get('gm_lang'))==='fr'?'fr':'en';
+const t=(k,v={})=>String(I18N[lang()][k]??I18N.en[k]??k).replace(/\{(\w+)\}/g,(m,n)=>v[n]??m);
+
+function applyLang(){
+  document.documentElement.lang=lang(); document.title=t('app_title');
+  document.querySelectorAll('[data-i]').forEach(e=>e.textContent=t(e.dataset.i));
+  document.querySelectorAll('[data-ih]').forEach(e=>e.innerHTML=t(e.dataset.ih));
+  document.querySelectorAll('[data-ph]').forEach(e=>e.placeholder=t(e.dataset.ph));
+  document.querySelectorAll('[data-ti]').forEach(e=>e.title=t(e.dataset.ti));
+  $('#mLists').value=t('lists_menu');
+}
+function inkFor(hex){const n=parseInt(hex.slice(1),16),r=n>>16&255,g=n>>8&255,b=n&255;return (.299*r+.587*g+.114*b)>170?'#10140f':'#ffffff'}
+function applyTheme(mode,acc){
+  mode=['light','dark'].includes(mode)?mode:'auto'; acc=/^#[0-9a-f]{6}$/i.test(acc||'')?acc:'#2f7d46';
+  const r=document.documentElement; r.dataset.mode=mode; r.style.setProperty('--acc',acc); r.style.setProperty('--acc-ink',inkFor(acc));
+  store.set('gm_mode',mode); store.set('gm_acc',acc)}
+
+async function api(path,body){
+  const r=await fetch(path,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const j=await r.json().catch(()=>({error:'?'}));
+  if(!r.ok||j.error) throw new Error(j.error||('Error '+r.status));
+  return j;
+}
+function toast(m){const e=$('#toast');e.textContent=m;e.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display='none',3500)}
+const vkey=v=>v.split('.').map(Number);
+const vcmp=(a,b)=>{const x=vkey(a),y=vkey(b);for(let i=0;i<3;i++){const d=(x[i]||0)-(y[i]||0);if(d)return d}return 0};
+const scanOpts=()=>[{v:'',l:t('all_m')},{v:'ok',l:t('sc_ok')},{v:'à vérifier',l:t('sc_warn')},{v:'introuvable',l:t('sc_bad')},{v:'none',l:t('sc_none')}];
+const tracked=()=>(S.cfg.tracked_versions||'').split(',').map(s=>s.trim()).filter(Boolean);
+const allVersions=()=>[...new Set([...tracked(),...S.mods.flatMap(m=>m.versions)])].sort(vcmp).reverse();
+const catOpts=()=>[...new Set([...S.categories.map(c=>c.name),...S.mods.map(m=>m.category).filter(Boolean)])].sort((a,b)=>a.localeCompare(b,lang())).map(c=>({v:c,l:c}));
+
+// Custom dropdown (replaces browser menus): scrollable list, filterable, keyboard friendly.
+function combo(inp,{opts,free=false,onPick,fixed}){
+  inp.autocomplete='off'; inp.classList.add('cb'); if(!free)inp.readOnly=true;
+  let panel=null,items=[],idx=-1;
+  const ok=o=>!o.h&&!o.sep, fx=()=>typeof fixed==='function'?fixed():fixed;
+  const close=()=>{if(panel){panel.remove();panel=null}};
+  const mark=()=>{[...panel.children].forEach((c,i)=>c.classList.toggle('on',i===idx));panel.children[idx]?.scrollIntoView({block:'nearest'})};
+  const open=()=>{
+    close(); const q=free?inp.value.trim().toLowerCase():'';
+    items=opts().filter(o=>!q||(ok(o)&&o.l.toLowerCase().includes(q))).slice(0,300); if(!items.length)return;
+    panel=document.createElement('div');panel.className='dd';
+    panel.innerHTML=items.map((o,i)=>o.sep?'<div class="ddsep"></div>':o.h?`<div class="ddh">${esc(o.l)}</div>`:`<div class="ddi" data-i="${i}">${esc(o.l)}</div>`).join('');
+    (inp.closest('dialog')||document.body).appendChild(panel);
+    const r=inp.getBoundingClientRect(),below=innerHeight-r.bottom-12,above=r.top-12,h=Math.min(320,panel.scrollHeight+8);
+    panel.style.left=r.left+'px';panel.style.width=Math.max(r.width,fixed?330:160)+'px';
+    if(below<h&&above>below){panel.style.bottom=(innerHeight-r.top+4)+'px';panel.style.maxHeight=Math.min(320,above)+'px'}
+    else{panel.style.top=(r.bottom+4)+'px';panel.style.maxHeight=Math.min(320,below)+'px'}
+    panel.onmousedown=e=>{e.preventDefault();const it=e.target.closest('.ddi');if(it)choose(items[+it.dataset.i])};
+    idx=-1};
+  const choose=o=>{if(fixed)inp.value=fx();else if(free)inp.value=o.v;else{inp.value=o.l;inp.dataset.value=o.v}close();onPick&&onPick(o);inp.dispatchEvent(new Event('change'))};
+  const step=d=>{for(let k=0;k<items.length;k++){idx=(idx+d+items.length)%items.length;if(ok(items[idx]))break}mark()};
+  if(free)inp.addEventListener('focus',open);  // read-only menus open on click only (focus restored after a dialog must not reopen them)
+  inp.addEventListener('click',()=>{if(!panel)open()});
+  inp.addEventListener('input',open);
+  inp.addEventListener('blur',close);
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(!panel)open();if(!panel)return;step(e.key==='ArrowDown'?1:-1)}
+    else if(e.key==='Enter'&&panel&&idx>=0){e.preventDefault();choose(items[idx])}
+    else if((e.key==='Enter'||e.key===' ')&&!panel&&!free){e.preventDefault();open()}
+    else if(e.key==='Escape'&&panel){e.preventDefault();e.stopPropagation();close()}});
+  addEventListener('resize',close);
+}
+const setCombo=(inp,v,l)=>{inp.dataset.value=v;inp.value=l};
+
+async function load(){
+  S=await api('/api/state');
+  store.set('gm_lang',lang()); applyTheme(S.cfg.theme_mode,S.cfg.theme_accent); applyLang();
+  sel=new Set([...sel].filter(id=>S.mods.some(m=>m.id===id)));
+  render();
+}
+
+function filtered(){
+  const q=F.q.trim().toLowerCase(), inList=F.list?new Set(S.lists.find(l=>l.id===F.list)?.ids||[]):null;
+  let r=S.mods.filter(m=>{
+    if(inList&&!inList.has(m.id))return false;
+    if(F.cat==='__none'){if(m.category)return false}else if(F.cat&&m.category!==F.cat)return false;
+    if(F.loaders.size&&![...F.loaders].some(l=>m.loaders.includes(l)))return false;
+    if(F.ver&&!m.versions.includes(F.ver))return false;
+    if(F.scan==='none'){if(m.scan_status)return false}else if(F.scan&&m.scan_status!==F.scan)return false;
+    if(q&&!(m.name+' '+m.category+' '+m.description).toLowerCase().includes(q))return false;
+    return true});
+  const k=sort.k,d=sort.d;
+  r.sort((a,b)=>{let x=a[k],y=b[k];if(Array.isArray(x)){x=x.join();y=y.join()}
+    return (String(x||'').localeCompare(String(y||''),lang(),{numeric:true}))*d||a.name.localeCompare(b.name)});
+  return r;
+}
+
+const COLS=[['name','th_mod'],['category','th_cat'],['loaders','th_loaders'],['versions','th_versions'],['description','th_desc'],['scan_status','th_data'],['_','']];
+function render(){
+  $('#lists').innerHTML=`<div class="nav ${F.list===null?'on':''}" data-l=""><span>${t('all_mods')}</span><small>${S.mods.length}</small></div>`+
+    S.lists.map(l=>`<div class="nav ${F.list===l.id?'on':''}" data-l="${l.id}"><span>📋 ${esc(l.name)}</span><small>${l.ids.length}</small></div>`).join('')+
+    (F.list!==null?`<div class="lbtns"><button id="lRen">${t('ls_rename')}</button><button id="lUpd">${t('ls_replace')}</button><a href="/api/export.csv?id=${F.list}" download><button type="button">⬇ CSV</button></a><a href="/api/lists.json?id=${F.list}" download><button type="button">${t('ls_file')}</button></a><button class="danger" id="lDel" title="${esc(t('ls_del_t'))}">✕</button></div>`:'');
+  $('#loaders').innerHTML=Object.entries(LABEL).map(([k,v])=>`<span class="chip ${F.loaders.has(k)?'on':''}" data-lo="${k}">${v}</span>`).join('');
+  $('#fVer').value=F.ver||t('all_m'); $('#fScan').value=(scanOpts().find(o=>o.v===F.scan)||scanOpts()[0]).l;
+  const cnt={}; S.mods.forEach(m=>{const c=m.category||'__none'; cnt[c]=(cnt[c]||0)+1});
+  const catTag=Object.fromEntries(S.categories.map(c=>[c.name,c.tag]));
+  const names=catOpts().map(o=>o.v); if(cnt.__none)names.push('__none');
+  $('#cats').innerHTML=`<div class="nav ${F.cat===''?'on':''}" data-c=""><span>${t('all_f')}</span><small>${S.mods.length}</small></div>`+
+    names.map(c=>`<div class="nav ${F.cat===c?'on':''}" data-c="${esc(c)}" ${catTag[c]?`title="${esc(t('tag_title',{tag:catTag[c]}))}"`:''}><span>${c==='__none'?t('none_cat'):esc(c)}</span><small>${cnt[c]||0}</small></div>`).join('');
+  $('#thead').innerHTML=`<th style="width:30px"><input type="checkbox" id="chAll"></th>`+COLS.map(([k,key])=>`<th data-k="${k}">${key?t(key):''}${sort.k===k?(sort.d>0?' ▲':' ▼'):''}</th>`).join('');
+  const rows=filtered(), tr=tracked();
+  $('#tbody').innerHTML=rows.map(m=>{
+    const link=m.mr_url||m.cf_url;
+    const vs=m.versions.filter(v=>tr.includes(v)), more=m.versions.length-vs.length;
+    const st={ok:['ok','st_ok'],'à vérifier':['w','st_warn'],introuvable:['b','st_bad']}[m.scan_status];
+    return `<tr data-id="${m.id}"><td><input type="checkbox" class="ck" ${sel.has(m.id)?'checked':''}></td>
+    <td><div class="nm"><span class="ico">${m.icon_url?`<img src="${esc(m.icon_url)}" loading="lazy" onerror="this.remove()">`:''}${esc(m.name[0]||'?').toUpperCase()}</span>
+      ${link?`<a href="${esc(link)}" target="_blank" rel="noopener">${esc(m.name)}</a>`:`<span style="font-weight:600">${esc(m.name)}</span>`}</div></td>
+    <td>${esc(m.category)}</td>
+    <td>${m.loaders.map(l=>`<span class="badge l">${LABEL[l]||l}</span>`).join('')||'<span class="hint">?</span>'}</td>
+    <td title="${esc(m.versions.join(', '))}">${vs.map(v=>`<span class="badge">${v}</span>`).join('')}${more>0?`<span class="hint">+${more}</span>`:''}${!m.versions.length?'<span class="hint">?</span>':''}</td>
+    <td><div class="desc" title="${esc(m.description)}">${esc(m.description)}</div></td>
+    <td><span class="st ${st?st[0]:'n'}">${st?t(st[1]):'—'}</span></td>
+    <td style="white-space:nowrap"><button class="rf" title="${esc(t('row_refresh'))}">↻</button> <button class="ed" title="${esc(t('row_edit'))}">✎</button></td></tr>`}).join('');
+  $('#empty').hidden=rows.length>0; $('#empty').textContent=S.mods.length?t('empty_f'):t('empty_db');
+  $('#count').textContent=t('count',{n:rows.length,total:S.mods.length});
+  $('#selbar').classList.toggle('show',sel.size>0); $('#selN').textContent=t('selected',{n:sel.size});
+  const all=$('#chAll'); if(all) all.checked=rows.length>0&&rows.every(m=>sel.has(m.id));
+}
+
+document.addEventListener('click',e=>{
+  const x=e.target;
+  const nav=x.closest('[data-l]'); if(nav){F.list=nav.dataset.l?+nav.dataset.l:null;return render()}
+  const cat=x.closest('[data-c]'); if(cat){F.cat=cat.dataset.c;return render()}
+  const lo=x.closest('[data-lo]'); if(lo){const k=lo.dataset.lo;F.loaders.has(k)?F.loaders.delete(k):F.loaders.add(k);return render()}
+  const th=x.closest('th[data-k]'); if(th&&th.dataset.k!=='_'){const k=th.dataset.k;sort=sort.k===k?{k,d:-sort.d}:{k,d:1};return render()}
+  if(x.id==='chAll'){filtered().forEach(m=>x.checked?sel.add(m.id):sel.delete(m.id));return render()}
+  if(x.classList.contains('ck')){const id=+x.closest('tr').dataset.id;x.checked?sel.add(id):sel.delete(id);$('#selbar').classList.toggle('show',sel.size>0);$('#selN').textContent=t('selected',{n:sel.size});return}
+  if(x.classList.contains('rf'))return refreshIds([+x.closest('tr').dataset.id],x);
+  if(x.classList.contains('ed')){return openEdit(S.mods.find(m=>m.id===+x.closest('tr').dataset.id))}
+  if(x.id==='lRen')return listRename(); if(x.id==='lUpd')return listReplace(); if(x.id==='lDel')return listDelete();
+});
+$('#q').oninput=e=>{F.q=e.target.value;render()};
+combo($('#fVer'),{opts:()=>[{v:'',l:t('all_m')},...allVersions().map(v=>({v,l:v}))]});
+combo($('#fScan'),{opts:scanOpts});
+$('#fVer').onchange=e=>{F.ver=e.target.dataset.value||'';render()};
+$('#fScan').onchange=e=>{F.scan=e.target.dataset.value||'';render()};
+$('#bAll').onclick=()=>{filtered().forEach(m=>sel.add(m.id));render()};
+$('#bNone').onclick=()=>{sel.clear();render()};
+$('#bAdd').onclick=()=>openEdit(null);
+$('#bImport').onclick=()=>$('#file').click();
+$('#file').onchange=async e=>{const f=e.target.files[0];if(!f)return;
+  try{const r=await api('/api/import',{text:await f.text()});toast(t('imported',r));await load()}catch(x){alert(x.message)}
+  e.target.value=''};
+$('#bDel').onclick=async()=>{if(!confirm(t('confirm_deln',{n:sel.size})))return;
+  await api('/api/mod/delete',{ids:[...sel]});sel.clear();await load()};
+$('#bCat').onclick=()=>pick(t('cat_title',{n:sel.size}),`<label class="f"><span>${t('cat_pick_l')}</span><input id="pCat"></label>`,
+  async()=>{await api('/api/mods/category',{ids:[...sel],category:$('#pCat').value.trim()});await load()},t('apply'));
+$('#bRef').onclick=()=>refreshIds([...sel]);
+async function refreshIds(ids,btn){
+  const old=btn?.textContent; if(btn){btn.disabled=true;btn.textContent='…'} toast(t('refreshing',{n:ids.length}));
+  try{const job=await api('/api/scan',{ids,rename:false});const j=await poll(job.id,()=>{});await load();const r=j.result||{};
+    toast(j.state==='error'?('✕ '+j.message):t('refreshed',{ok:r.ok||0,w:r['à vérifier']||0,b:r['introuvable']||0}))}
+  catch(x){alert(x.message)}
+  finally{if(btn){btn.disabled=false;btn.textContent=old}}}
+
+// --- search and quick add
+let fdRes=[];
+async function fdSearch(){
+  const qv=$('#fdQ').value.trim(); if(qv.length<2)return; $('#fdGo').disabled=true; $('#fdRes').innerHTML=`<div class="hint">${t('looking')}</div>`;
+  try{fdRes=(await api('/api/search',{q:qv})).results;fdDraw()}catch(x){$('#fdRes').innerHTML=`<div class="hint" style="color:var(--bad)">✕ ${esc(x.message)}</div>`}
+  $('#fdGo').disabled=false}
+function fdDraw(){
+  $('#fdRes').innerHTML=fdRes.length?fdRes.map((r,k)=>`<div class="fail" style="flex-direction:row;gap:10px;align-items:center">
+    <span class="ico">${r.icon?`<img src="${esc(r.icon)}" onerror="this.remove()">`:''}${esc((r.title[0]||'?').toUpperCase())}</span>
+    <span style="flex:1;min-width:0"><b>${esc(r.title)}</b> <span class="badge">${r.src==='modrinth'?'Modrinth':'CurseForge'}</span><br><small>${esc(r.description)}</small></span>
+    ${r.in_db?`<span class="hint">${t('fd_in')}</span>`:`<button class="primary" data-k="${k}">${t('fd_add')}</button>`}</div>`).join(''):`<div class="hint">${t('fd_none')}</div>`}
+$('#bFind').onclick=()=>{$('#fdRes').innerHTML='';$('#dFind').showModal();$('#fdQ').focus()};
+$('#fdGo').onclick=fdSearch; $('#fdQ').onkeydown=e=>{if(e.key==='Enter')fdSearch()}; $('#fdClose').onclick=()=>$('#dFind').close();
+$('#fdRes').onclick=async e=>{const b=e.target.closest('button[data-k]');if(!b)return;const r=fdRes[+b.dataset.k];b.disabled=true;b.textContent='…';
+  const url=r.src==='modrinth'?'https://modrinth.com/mod/'+r.slug:'https://www.curseforge.com/minecraft/mc-mods/'+r.slug;
+  try{await api('/api/mod',{name:r.title,[r.src==='modrinth'?'modrinth_url':'curseforge_url']:url,icon_url:r.icon,description:r.description,
+      category:(F.cat&&F.cat!=='__none')?F.cat:'',scan_status:''});
+    r.in_db=r.title;toast(t('fd_added',{name:r.title}));await load();fdSearch()}catch(x){alert(x.message);b.disabled=false;b.textContent=t('fd_add')}};
+
+// --- lists
+$('#bList').onclick=()=>saveListDialog();
+function saveListDialog(){
+  if(!sel.size)return alert(t('ls_pick_first'));
+  pick(t('ls_pick_title'),`<label class="f"><span>${t('ls_existing')}</span><input id="pSel" class="cb" value="${esc(t('ls_new_opt'))}" data-value=""></label>
+    <label class="f"><span>${t('ls_newname')}</span><input id="pName" placeholder="${esc(t('ls_newname_ph'))}"></label>`,
+    async()=>{const lid=$('#pSel').dataset.value; const name=$('#pName').value.trim();
+      if(!lid&&!name)throw new Error(t('ls_name_req'));
+      await api('/api/list',lid?{id:+lid,name:S.lists.find(l=>l.id==lid).name,ids:[...sel],append:true}:{name,ids:[...sel]});
+      toast(t('ls_saved'));await load()},t('save'))}
+const listOpts=()=>[{h:true,l:t('ls_head')},
+  ...(S.lists.length?S.lists.map(l=>({v:'list:'+l.id,l:`📋 ${l.name}  (${l.ids.length})`})):[{h:true,l:t('ls_none')}]),
+  {sep:true},{v:'act:save',l:t('ls_save')},{v:'act:export',l:t('ls_export')},{v:'act:import',l:t('ls_import')},{v:'act:all',l:t('ls_all')}];
+combo($('#mLists'),{opts:listOpts,fixed:()=>t('lists_menu'),onPick:o=>{
+  if(o.v.startsWith('list:')){const l=S.lists.find(x=>x.id===+o.v.slice(5));F.list=l.id;sel=new Set(l.ids);render();toast(t('ls_selected',{name:l.name,n:l.ids.length}))}
+  else if(o.v==='act:save')saveListDialog();
+  else if(o.v==='act:export')location.href='/api/lists.json';
+  else if(o.v==='act:import')$('#fileL').click();
+  else if(o.v==='act:all'){F.list=null;render()}}});
+$('#fileL').onchange=async e=>{const f=e.target.files[0];if(!f)return;
+  try{const r=await api('/api/lists/import',{text:await f.text()});toast(t('ls_imported',r)+(r.created?t('ls_created',{n:r.created}):''));await load()}catch(x){alert(x.message)}
+  e.target.value=''};
+async function listRename(){const l=S.lists.find(l=>l.id===F.list);const n=prompt(t('ls_rename_p'),l.name);if(!n)return;
+  try{await api('/api/list',{id:l.id,name:n});await load()}catch(x){alert(x.message)}}
+async function listReplace(){const l=S.lists.find(l=>l.id===F.list);
+  if(!sel.size)return alert(t('ls_replace_none'));
+  if(!confirm(t('ls_replace_c',{name:l.name,n:sel.size})))return;
+  await api('/api/list',{id:l.id,name:l.name,ids:[...sel]});await load()}
+async function listDelete(){const l=S.lists.find(l=>l.id===F.list);if(!confirm(t('ls_del_c',{name:l.name})))return;
+  await api('/api/list/delete',{id:l.id});F.list=null;await load()}
+
+function pick(title,body,onOk,okLabel='OK'){
+  $('#pTitle').textContent=title;$('#pBody').innerHTML=body;
+  $('#pFoot').innerHTML=`<button id="pNo">${t('cancel')}</button><button class="primary" id="pOk">${esc(okLabel)}</button>`;
+  $('#pNo').onclick=()=>$('#dPick').close();
+  $('#pOk').onclick=async()=>{try{await onOk();$('#dPick').close()}catch(x){alert(x.message)}};
+  $('#dPick').showModal(); if($('#pCat'))combo($('#pCat'),{free:true,opts:catOpts});
+  if($('#pSel'))combo($('#pSel'),{opts:()=>[{v:'',l:t('ls_new_opt')},...S.lists.map(l=>({v:String(l.id),l:l.name}))]})}
+
+// --- add / edit
+function openEdit(m){
+  editing=m; editLinks=m?[...m.links]:[]; editIds={modrinth_id:m?.modrinth_id||null,curseforge_id:m?.curseforge_id||null};
+  $('#eTitle').textContent=m?t('e_edit'):t('e_add');
+  $('#eName').value=m?.name||'';$('#eMr').value=m?.mr_url||'';$('#eCf').value=m?.cf_url||'';
+  $('#eCat').value=m?.category||(F.cat&&F.cat!=='__none'?F.cat:'');$('#eIcon').value=m?.icon_url||'';$('#eVers').value=(m?.versions||[]).join(', ');
+  $('#eDesc').value=m?.description||'';$('#eNotes').value=m?.notes||'';$('#eLookMsg').textContent='';
+  $('#eLoaders').innerHTML=Object.entries(LABEL).map(([k,v])=>`<label><input type="checkbox" value="${k}" ${m?.loaders.includes(k)?'checked':''}> ${v}</label>`).join('');
+  $('#eDel').style.display=m?'':'none'; drawDeps(); $('#dEdit').showModal()}
+function drawDeps(){$('#eDeps').innerHTML=editLinks.map(id=>{const d=S.mods.find(x=>x.id===id);return d?`<span class="pill">${esc(d.name)}<button data-rm="${id}">✕</button></span>`:''}).join('')}
+$('#eDeps').onclick=e=>{const id=e.target.dataset.rm;if(id){editLinks=editLinks.filter(x=>x!==+id);drawDeps()}};
+combo($('#eDepIn'),{free:true,opts:()=>S.mods.filter(m=>m.id!==editing?.id&&!editLinks.includes(m.id)).map(m=>({v:m.name,l:m.name})),
+  onPick:o=>{const d=S.mods.find(x=>x.name===o.v);if(d&&!editLinks.includes(d.id)){editLinks.push(d.id);drawDeps()}setTimeout(()=>$('#eDepIn').value='',0)}});
+combo($('#eCat'),{free:true,opts:catOpts});
+$('#eMr').oninput=()=>editIds.modrinth_id=null; $('#eCf').oninput=()=>editIds.curseforge_id=null;
+$('#eCancel').onclick=()=>{$('#dEdit').close();if(depCtx){toast(t('dep_skipped',{name:depCtx.cur}));nextDep()}};
+$('#dEdit').addEventListener('cancel',e=>{if(depCtx){e.preventDefault();$('#eCancel').click()}});
+$('#eLook').onclick=async()=>{const u=$('#eMr').value.trim()||$('#eCf').value.trim();const msg=$('#eLookMsg');
+  if(!u){msg.textContent=t('look_first');return}
+  msg.textContent=t('looking');
+  try{const i=await api('/api/lookup',{url:u});
+    if(!$('#eName').value)$('#eName').value=i.title; if(!$('#eIcon').value)$('#eIcon').value=i.icon; if(!$('#eDesc').value)$('#eDesc').value=i.description;
+    if(i.versions.length)$('#eVers').value=i.versions.join(', ');
+    document.querySelectorAll('#eLoaders input').forEach(c=>c.checked=i.loaders.includes(c.value));
+    const both=[i,i.other].filter(Boolean);
+    both.forEach(x=>{if(x.src==='modrinth'){editIds.modrinth_id=x.id;$('#eMr').value='https://modrinth.com/mod/'+x.slug}
+      else{editIds.curseforge_id=x.id;$('#eCf').value='https://www.curseforge.com/minecraft/mc-mods/'+x.slug}});
+    if(i.other){const lo=new Set(both.flatMap(x=>x.loaders)),vs=[...new Set(both.flatMap(x=>x.versions))].sort(vcmp).reverse();
+      document.querySelectorAll('#eLoaders input').forEach(c=>c.checked=lo.has(c.value));$('#eVers').value=vs.join(', ')}
+    msg.textContent=t('look_ok'); await handleDeps(i,msg)}catch(x){msg.textContent='✕ '+x.message}};
+// --- dependencies found by "fill in automatically"
+let depCtx=null;
+const formSnap=()=>({editing,editLinks:[...editLinks],editIds:{...editIds},
+  v:Object.fromEntries(['eName','eMr','eCf','eCat','eIcon','eVers','eDesc','eNotes'].map(k=>[k,$('#'+k).value])),
+  lo:[...document.querySelectorAll('#eLoaders input:checked')].map(c=>c.value),title:$('#eTitle').textContent,lookMsg:$('#eLookMsg').textContent});
+function formRestore(s){editing=s.editing;editLinks=s.editLinks;editIds=s.editIds;
+  Object.entries(s.v).forEach(([k,v])=>$('#'+k).value=v);
+  $('#eLoaders').innerHTML=Object.entries(LABEL).map(([k,v])=>`<label><input type="checkbox" value="${k}" ${s.lo.includes(k)?'checked':''}> ${v}</label>`).join('');
+  $('#eTitle').textContent=s.title;$('#eLookMsg').textContent=s.lookMsg;$('#eDel').style.display=editing?'':'none';drawDeps()}
+async function handleDeps(i,msg){
+  const deps=(i.deps||[]).filter(d=>!(editing&&d.mod_id===editing.id));
+  if(!deps.length){msg.textContent+=' · '+t('dep_nodeps');return}
+  const have=deps.filter(d=>d.mod_id&&!editLinks.includes(d.mod_id)), missing=deps.filter(d=>!d.mod_id);
+  if(have.length){have.forEach(d=>editLinks.push(d.mod_id));drawDeps();msg.textContent+=' · '+t('dep_linked',{names:have.map(d=>d.db_name).join(', ')})}
+  if(!missing.length)return;
+  const yes=await new Promise(res=>{
+    $('#pTitle').textContent=t('dep_m_title');
+    $('#pBody').innerHTML=`<p style="margin:0">${esc(t('dep_m_text'))}</p>`+missing.map(d=>`<div class="fail"><b>${esc(d.title)}</b><small>${esc(d.description)}</small></div>`).join('')+`<p class="hint" style="margin:0">${esc(t('dep_m_q'))}</p>`;
+    $('#pFoot').innerHTML=`<button id="pNo">${t('dep_no')}</button><button class="primary" id="pOk">${t('dep_yes')}</button>`;
+    const d=$('#dPick'); let r=false; d.onclose=()=>{d.onclose=null;res(r)};
+    $('#pNo').onclick=()=>d.close(); $('#pOk').onclick=()=>{r=true;d.close()}; d.showModal()});
+  if(!yes)return;
+  depCtx={parent:formSnap(),queue:missing,n:missing.length,added:[],cur:''};
+  nextDep()}
+function nextDep(){
+  const c=depCtx;
+  if(!c.queue.length){depCtx=null;formRestore(c.parent);
+    c.added.forEach(a=>{if(!editLinks.includes(a.id))editLinks.push(a.id)});drawDeps();
+    $('#dEdit').showModal();
+    if(c.added.length)$('#eLookMsg').textContent=t('dep_added',{names:c.added.map(a=>a.name).join(', ')});
+    return}
+  const d=c.queue.shift(); c.cur=d.title;
+  $('#dEdit').close(); openEdit(null);
+  const lib=S.categories.find(x=>/^(Bibliothèques et API|Libraries & APIs)$/.test(x.name));
+  $('#eTitle').textContent=t('dep_add_title',{i:c.n-c.queue.length,n:c.n,name:d.title});
+  $('#eName').value=d.title;$('#eIcon').value=d.icon||'';$('#eDesc').value=d.description||'';$('#eVers').value=(d.versions||[]).join(', ');
+  $('#eCat').value=lib?lib.name:t('dep_cat_default');
+  editIds={modrinth_id:null,curseforge_id:null};
+  const both=[d,d.other].filter(Boolean);
+  both.forEach(x=>{if(x.src==='modrinth'){$('#eMr').value='https://modrinth.com/mod/'+x.slug;editIds.modrinth_id=x.id}
+    else{$('#eCf').value='https://www.curseforge.com/minecraft/mc-mods/'+x.slug;editIds.curseforge_id=x.id}});
+  const lo=new Set(both.flatMap(x=>x.loaders||[]));$('#eVers').value=[...new Set(both.flatMap(x=>x.versions||[]))].sort(vcmp).reverse().join(', ');
+  document.querySelectorAll('#eLoaders input').forEach(x=>x.checked=lo.has(x.value))}
+$('#eSave').onclick=async()=>{
+  const name=$('#eName').value.trim(); if(!name)return alert(t('name_required'));
+  const body={id:editing?.id,name,modrinth_url:$('#eMr').value,curseforge_url:$('#eCf').value,
+    category:$('#eCat').value.trim(),icon_url:$('#eIcon').value.trim(),description:$('#eDesc').value.trim(),notes:$('#eNotes').value.trim(),
+    loaders:[...document.querySelectorAll('#eLoaders input:checked')].map(c=>c.value),
+    versions:$('#eVers').value.split(',').map(s=>s.trim()).filter(Boolean),links:editLinks,...editIds};
+  if(!editing)body.scan_status='';
+  const btn=$('#eSave'); btn.disabled=true; btn.textContent=t('saving');
+  try{const r=await api('/api/mod',body);$('#dEdit').close();await load();
+    if(depCtx){depCtx.added.push({id:r.id,name});return nextDep()}
+    toast(r.scan==='ok'?t('saved_ok'):r.scan==='à vérifier'?t('saved_warn'):r.scan==='introuvable'?t('saved_bad'):r.scan_error?t('saved_err',{e:r.scan_error}):t('saved'))}
+  catch(x){alert(x.message)}
+  finally{btn.disabled=false;btn.textContent=t('save')}};
+$('#eDel').onclick=async()=>{if(!confirm(t('confirm_del1')))return;await api('/api/mod/delete',{ids:[editing.id]});$('#dEdit').close();await load()};
+
+// --- categories and tags
+let catDel=[];
+function openCats(){catDel=[];$('#cRows').innerHTML='';S.categories.forEach(c=>addCatRow(c));$('#dCat').showModal()}
+function addCatRow(c={name:'',tag:'',count:0}){const r=document.createElement('div');r.className='crow';r.dataset.old=c.name;r.dataset.count=c.count;
+  r.innerHTML=`<input class="cn" value="${esc(c.name)}" placeholder="${esc(t('cd_name_ph'))}"><input class="ct" value="${esc(c.tag)}" placeholder="${esc(t('cd_tag_ph'))}"><span class="hint">${c.count}</span><button class="danger cx" title="${esc(t('cd_del_t'))}">✕</button>`;
+  $('#cRows').appendChild(r); if(!c.name){r.querySelector('.cn').focus();r.scrollIntoView({block:'nearest'})}}
+$('#bCats').onclick=openCats; $('#sCats').onclick=()=>{closeSettings(true);openCats()};
+$('#cAdd').onclick=()=>addCatRow(); $('#cCancel').onclick=()=>$('#dCat').close();
+$('#cRows').onclick=e=>{const b=e.target.closest('.cx');if(!b)return;const r=b.closest('.crow'),n=+r.dataset.count;
+  if(r.dataset.old){if(n&&!confirm(t('cd_del_c',{name:r.dataset.old,n})))return;catDel.push(r.dataset.old)}
+  r.remove()};
+$('#cSave').onclick=async()=>{
+  const rows=[...document.querySelectorAll('#cRows .crow')].map(r=>({old:r.dataset.old,name:r.querySelector('.cn').value.trim(),tag:r.querySelector('.ct').value}));
+  const names=rows.filter(r=>r.name).map(r=>r.name.toLowerCase()),dup=names.find((n,i)=>names.indexOf(n)!==i);
+  if(dup)return alert(t('cd_dup',{name:dup}));
+  try{await api('/api/categories/save',{rows,deleted:catDel});$('#dCat').close();await load();toast(t('cd_saved'))}catch(x){alert(x.message)}};
+
+// --- settings (language and theme apply live; Cancel restores the saved values)
+let draft={};
+const modeOpts=()=>[{v:'auto',l:t('m_auto')},{v:'light',l:t('m_light')},{v:'dark',l:t('m_dark')}];
+const langOpts=()=>[{v:'en',l:'English'},{v:'fr',l:'Français'}];
+function drawSwatches(){$('#sSw').innerHTML=THEMES.map(([id,c])=>`<button class="sw ${draft.acc.toLowerCase()===c?'on':''}" data-sw="${c}" style="background:${c}" title="${esc(t('th_'+id))}"></button>`).join('');$('#sColor').value=draft.acc}
+let pvT=0,needRender=false;
+function previewDraft(){  // light preview: only CSS variables change; the 500-row table is redrawn once when the dialog closes
+  applyTheme(draft.mode,draft.acc);
+  if((S.cfg.lang||'en')!==draft.lang||lang()!==draft.lang){S.cfg.lang=draft.lang;applyLang();needRender=true}
+  setCombo($('#sMode'),draft.mode,(modeOpts().find(o=>o.v===draft.mode)||{}).l);setCombo($('#sLang'),draft.lang,draft.lang==='fr'?'Français':'English');drawSwatches()}
+const previewSoon=()=>{if(pvT)return;pvT=requestAnimationFrame(()=>{pvT=0;previewDraft()})};
+combo($('#sMode'),{opts:modeOpts,onPick:o=>{draft.mode=o.v;previewDraft()}});
+combo($('#sLang'),{opts:langOpts,onPick:o=>{draft.lang=o.v;previewDraft()}});
+$('#sSw').onclick=e=>{const c=e.target.closest('.sw');if(c){draft.acc=c.dataset.sw;previewDraft()}};
+$('#sColor').oninput=e=>{draft.acc=e.target.value;previewSoon()};
+$('#bSet').onclick=()=>{draft={lang:lang(),mode:S.cfg.theme_mode||'auto',acc:S.cfg.theme_accent||'#2f7d46'};
+  $('#sKey').value=S.cfg.curseforge_key||'';$('#sOut').value=S.cfg.out_dir;$('#sVers').value=S.cfg.tracked_versions;$('#sTestMsg').textContent='';
+  previewDraft();document.documentElement.classList.add('pv');$('#dSet').showModal()};
+function closeSettings(revert){if(revert){draft={lang:store.get('gm_lang')==='fr'?'fr':'en',mode:S.cfg.theme_mode||'auto',acc:S.cfg.theme_accent||'#2f7d46'};previewDraft()}$('#dSet').close()}
+$('#dSet').addEventListener('close',()=>{document.documentElement.classList.remove('pv');if(needRender){needRender=false;render()}});
+$('#sReset').onclick=async()=>{if(!confirm(t('s_reset_c')))return;if(!confirm(t('s_reset_c')))return;await api('/api/reset',{});sel.clear();F.list=null;F.cat='';closeSettings(true);await load()};
+$('#sCancel').onclick=()=>closeSettings(true);
+$('#dSet').addEventListener('cancel',()=>closeSettings(true));
+$('#sTest').onclick=async()=>{const m=$('#sTestMsg');m.textContent=t('s_testing');
+  try{await api('/api/config',{curseforge_key:$('#sKey').value.trim()});const r=await api('/api/config/test',{});m.textContent=r.ok?t('s_key_ok'):t('s_key_bad')}catch(x){m.textContent='✕ '+x.message}};
+$('#sSave').onclick=async()=>{await api('/api/config',{curseforge_key:$('#sKey').value.trim(),out_dir:$('#sOut').value.trim(),tracked_versions:$('#sVers').value,
+  lang:draft.lang,theme_mode:draft.mode,theme_accent:draft.acc});needRender=false;$('#dSet').close();await load()};
+
+// --- tasks (scan / download)
+async function poll(id,onView){
+  while(true){const j=await api('/api/job?id='+id);onView(j);
+    if(['done','error','cancelled'].includes(j.state))return j;
+    await new Promise(r=>setTimeout(r,j.state==='need_deps'?800:600))}}
+const bar=(d,tt,msg)=>`<div class="bar"><i style="width:${tt?Math.round(100*d/tt):0}%"></i></div><div class="hint">${d} / ${tt} — ${esc(msg||'')}</div>`;
+
+$('#bScan').onclick=()=>{
+  const pend=S.mods.filter(m=>!m.scan_status).length, retry=S.mods.filter(m=>['introuvable','à vérifier'].includes(m.scan_status)).length;
+  $('#scanBody').innerHTML=`<p>${t('sc_desc',{cf:S.cfg.has_key?t('sc_cf'):''})}${S.cfg.has_key?'':` <br><span class="hint">${t('sc_nocf')}</span>`}</p>
+    <label class="checks"><input type="radio" name="sc" value="pending" checked> ${t('sc_pending',{n:pend})}</label>
+    <label class="checks"><input type="radio" name="sc" value="retry" ${retry?'':'disabled'}> ${t('sc_retry',{n:retry})}</label>
+    <label class="checks"><input type="radio" name="sc" value="sel" ${sel.size?'':'disabled'}> ${t('sc_sel',{n:sel.size})}</label>
+    <label class="checks"><input type="radio" name="sc" value="all"> ${t('sc_all',{n:S.mods.length})}</label>
+    <label class="checks"><input type="checkbox" id="scDeps" checked> ${t('sc_deps_opt')}</label>
+    <p class="hint">${t('sc_hint')}</p>`;
+  $('#scanFoot').innerHTML=`<button id="scClose">${t('close')}</button><button class="primary" id="scGo">${t('sc_start')}</button>`;
+  $('#scClose').onclick=()=>$('#dScan').close();
+  $('#scGo').onclick=async()=>{
+    const v=document.querySelector('[name=sc]:checked').value;
+    $('#scGo').disabled=true;
+    const job=await api('/api/scan',{ids:v==='sel'?[...sel]:v,deps:$('#scDeps').checked});
+    $('#scanFoot').innerHTML=`<button id="scStop">${t('stop')}</button>`;
+    $('#scStop').onclick=()=>api('/api/job/cancel',{id:job.id});
+    let asked=false;
+    const j=await poll(job.id,j=>{
+      if(j.state==='need_deps'){if(!asked){asked=true;showDeps(job.id,j.ask.deps,()=>asked=false,'#scanBody','#scanFoot','sd_title','sd_ok','sd_cont')}}
+      else if(!asked)$('#scanBody').innerHTML=bar(j.done,j.total,j.message)});
+    await load();
+    const r=j.result||{};
+    $('#scanBody').innerHTML=j.state==='error'?`<p style="color:var(--bad)">✕ ${esc(j.message)}</p>`:
+      `<p><b>${j.state==='cancelled'?t('sc_stopped'):t('sc_done')}</b></p><p>${t('sc_r_ok',{n:r.ok||0})}<br>${t('sc_r_w',{n:r['à vérifier']||0})}<br>${t('sc_r_b',{n:r['introuvable']||0})}${r['erreur']?`<br>${t('sc_r_e',{n:r['erreur']})}`:''}${r.deps_linked?`<br>${t('sc_r_dl',{n:r.deps_linked})}`:''}${(r.deps_added||[]).length?`<br>${t('sc_r_da',{names:esc(r.deps_added.join(', '))})}`:''}</p>${r.cf_refuse?`<p style="color:var(--warn)">${t('sc_cf_refused')}</p>`:''}
+       <p class="hint">${t('sc_tip')}</p>`;
+    $('#scanFoot').innerHTML=`<button class="primary" id="scClose2">${t('close')}</button>`;$('#scClose2').onclick=()=>$('#dScan').close()};
+  $('#dScan').showModal()};
+
+$('#bDl').onclick=()=>{
+  const c=S.cfg, ids=[...sel];
+  const lname=F.list!==null?S.lists.find(l=>l.id===F.list).name:'mods';
+  $('#dlTitle').textContent=t('d_title',{n:ids.length});
+  $('#dlBody').innerHTML=`<div class="row"><label class="f"><span>${t('d_mc')}</span><input id="dMc" value="${esc(F.ver||c.last_mc)}"></label>
+    <label class="f"><span>${t('d_loader')}</span><input id="dLo" class="cb" value="${LABEL[c.last_loader]||'NeoForge'}" data-value="${c.last_loader||'neoforge'}"></label></div>
+    <div class="checks"><span>${t('d_from')}</span>
+      <label><input type="radio" name="dSrc" value="modrinth" ${c.last_source!=='curseforge'?'checked':''}> Modrinth</label>
+      <label><input type="radio" name="dSrc" value="curseforge" ${c.last_source==='curseforge'?'checked':''}> CurseForge ${c.has_key?'':t('d_cf_nokey')}</label></div>
+    <label class="checks"><input type="checkbox" id="dFb" checked> ${t('d_fb')}</label>
+    <label class="checks"><input type="checkbox" id="dDeps" ${c.auto_deps!==false?'checked':''}> ${t('d_autodeps')}</label>
+    <label class="checks"><input type="checkbox" id="dTag" ${c.last_tags?'checked':''}> ${t('d_tag')} ${S.categories.some(x=>x.tag)?'':`<span class="hint">${t('d_notag')}</span>`}</label>
+    <div class="row"><label class="f"><span>${t('d_zip')}</span><input id="dName" value="${esc(lname)}"></label>
+    <label class="f"><span>${t('d_out')}</span><input id="dOut" value="${esc(c.out_dir)}"></label></div>
+    <p class="hint">${t('d_hint')}</p>`;
+  $('#dlFoot').innerHTML=`<button id="dlNo">${t('cancel')}</button><button class="primary" id="dlGo">${t('d_go')}</button>`;
+  $('#dlNo').onclick=()=>$('#dDl').close();
+  $('#dlGo').onclick=startDl; $('#dDl').showModal();
+  combo($('#dMc'),{free:true,opts:()=>allVersions().map(v=>({v,l:v}))});
+  combo($('#dLo'),{opts:()=>Object.entries(LABEL).map(([k,v])=>({v:k,l:v}))})};
+
+async function startDl(){
+  const mc=$('#dMc').value.trim(); if(!/^\d+\.\d+(\.\d+)?$/.test(mc))return alert(t('d_bad_ver'));
+  const body={ids:[...sel],mc,loader:$('#dLo').dataset.value,source:document.querySelector('[name=dSrc]:checked').value,
+    fallback:$('#dFb').checked,auto_deps:$('#dDeps').checked,apply_tags:$('#dTag').checked,zip_name:$('#dName').value,out_dir:$('#dOut').value.trim()};
+  if(body.source==='curseforge'&&!S.cfg.has_key)return alert(t('d_need_key'));
+  const job=await api('/api/download',body);
+  $('#dlFoot').innerHTML=`<button id="dlStop">${t('cancel')}</button>`;$('#dlStop').onclick=()=>api('/api/job/cancel',{id:job.id});
+  let asked=false;
+  const j=await poll(job.id,j=>{
+    if(j.state==='need_deps'){ if(!asked){asked=true;showDeps(job.id,j.ask.deps,()=>asked=false)} }
+    else if(!asked){$('#dlBody').innerHTML=bar(j.done,j.total,j.message)}});
+  await load();
+  if(j.state==='done'){showResult(j.result);return}
+  $('#dlBody').innerHTML=j.state==='error'?`<p style="color:var(--bad)">✕ ${esc(j.message)}</p>`:`<p>${t('dl_cancelled')}</p>`;
+  $('#dlFoot').innerHTML=`<button class="primary" id="dlEnd">${t('close')}</button>`;$('#dlEnd').onclick=()=>$('#dDl').close()}
+
+function showDeps(id,deps,done,B='#dlBody',Fo='#dlFoot',kt='deps_title',ko='deps_ok',kc='deps_cont'){
+  $(B).innerHTML=`<p>${t(kt)}</p>`+
+    deps.map(d=>`<label class="fail" style="flex-direction:row;gap:8px;align-items:flex-start"><input type="checkbox" class="dk" value="${esc(d.key)}" checked>
+      <span><b>${esc(d.name)}</b> ${d.known?'':`<span class="badge">${t('deps_new')}</span>`}<br><small>${esc(t('deps_by',{names:d.required_by.join(', ')}))}</small></span></label>`).join('');
+  $(Fo).innerHTML=`<button id="dNone">${t('deps_none')}</button><button class="primary" id="dOkDeps">${t(ko)}</button>`;
+  const send=async acc=>{await api('/api/job/answer',{id,accept:acc});done();$(B).innerHTML=`<p class="hint">${t(kc)}</p>`;
+    $(Fo).innerHTML=`<button id="dlStop2">${t('cancel')}</button>`;$('#dlStop2').onclick=()=>api('/api/job/cancel',{id})};
+  $('#dNone').onclick=()=>send([]);
+  $('#dOkDeps').onclick=()=>send([...document.querySelectorAll('.dk:checked')].map(c=>c.value))}
+
+function showResult(r){
+  let h=r.zip?`<p>${t('res_ok',{n:r.n_ok})}<br><code style="word-break:break-all">${esc(r.zip)}</code></p>`:`<p>${t('res_none')}</p>`;
+  if(r.n_tagged)h+=`<p class="hint">${t('res_tagged',{n:r.n_tagged})}</p>`;
+  if(r.added_deps.length)h+=`<p>${t('res_deps',{n:r.added_deps.length,names:esc(r.added_deps.join(', '))})}</p>`;
+  if(r.failures.length){h+=`<p>${t('res_fail',{n:r.failures.length})}</p>`+
+    r.failures.map(f=>`<div class="fail"><b>${esc(f.name)}</b><small>${esc(f.why)}</small><span><a href="${esc(f.page)}" target="_blank" rel="noopener">${t('link_page')}</a> · <a href="${esc(f.files)}" target="_blank" rel="noopener">${t('link_files')}</a></span></div>`).join('')}
+  $('#dlBody').innerHTML=h;
+  $('#dlFoot').innerHTML=`${r.report_html?`<button id="oRep">${t('open_rep')}</button>`:''}<button id="oDir">${t('open_dir')}</button><button class="primary" id="dlEnd">${t('close')}</button>`;
+  if(r.report_html)$('#oRep').onclick=()=>api('/api/open',{path:r.report_html});
+  $('#oDir').onclick=()=>api('/api/open',{path:r.out_dir});$('#dlEnd').onclick=()=>$('#dDl').close()}
+
+applyLang();
+load().catch(e=>alert(t('load_err',{e:e.message})));
+</script>
+</body>
+</html>

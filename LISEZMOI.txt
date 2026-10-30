@@ -1,0 +1,120 @@
+GESTIONNAIRE DE MODS - Guide d'utilisation
+==========================================
+
+Programme local pour organiser des mods Minecraft : base de donnees, analyse en
+ligne (Modrinth / CurseForge), selection, telechargement dans un seul zip,
+listes enregistrees. Tout fonctionne sur l'ordinateur local ; aucun compte n'est
+necessaire, hormis une cle API CurseForge gratuite et facultative.
+
+1. Prerequis
+------------
+- Windows avec Python 3.8 ou plus recent (python.org, cocher "Add Python to PATH").
+- Aucune autre installation : seule la bibliotheque standard de Python est utilisee.
+
+2. Demarrage
+------------
+Double-cliquer sur lancer.bat. Une fenetre console s'ouvre et le navigateur affiche
+l'interface (http://127.0.0.1:8765). Fermer la console arrete le programme.
+
+Fichiers crees a cote du programme :
+- mods.db        la base de donnees (mods, listes, categories)
+- config.json    les parametres, dont la cle API CurseForge. NE JAMAIS partager ce fichier.
+- telechargements/  dossier de sortie par defaut (modifiable dans les parametres)
+
+Supprimer mods.db et config.json remet le programme a zero ; ils sont recrees au
+lancement suivant.
+
+3. Parametres
+-------------
+- Cle API CurseForge : gratuite, creee sur console.curseforge.com (API keys).
+  Modrinth n'a pas besoin de cle. "Tester la cle" permet de la verifier.
+- Dossier de sortie : emplacement des fichiers zip (de preference hors du disque systeme).
+- Versions Minecraft suivies : versions affichees dans le tableau.
+- Categories et tags : ajout, renommage, suppression, et tag facultatif par categorie (voir 7).
+- Apparence : langue (English / Francais), mode (automatique, clair, sombre) et couleur
+  du theme (predefinies ou personnalisee). Les changements sont apercus immediatement
+  et appliques avec "Enregistrer".
+
+4. Ajout et import de mods
+--------------------------
+- "+ Ajouter un mod" : saisir un nom et, au choix, un lien Modrinth et/ou CurseForge.
+  "Recuperer les infos depuis le lien" remplit nom, icone, description, loaders et
+  versions. Les dependances requises du mod sont liees automatiquement si elles figurent deja
+  dans la base. Les absentes sont signalees, avec proposition de les ajouter : chacune ouvre la
+  fenetre « Ajouter un mod » pre-remplie, puis le formulaire d'origine est restaure avec la
+  dependance liee. Une verification en ligne est lancee a l'enregistrement.
+- "Rechercher des mods" : recherche par nom sur Modrinth (et CurseForge avec une cle) via les API
+  officielles, et ajoute un resultat en un clic. La verification en ligne habituelle suit.
+- "Importer un CSV" : colonnes Mod/Name, Categorie, Loaders, Versions, lien Modrinth,
+  lien CurseForge, Description, Notes (separateur ";" ou ",", en-tetes francais ou anglais).
+- "Exporter en CSV" : exporte le tableau (ou une liste).
+
+5. Analyse en ligne
+-------------------
+"Analyser en ligne" recherche chaque mod sur Modrinth (et CurseForge si une cle est
+renseignee) et complete liens, icone, description, loaders et versions.
+Resultat par mod : Trouve / A verifier (correspondance incertaine) / Introuvable.
+Si les deux sites connaissent un mod, les deux liens sont enregistres. Sauf si la case est decochee,
+l'analyse lit aussi les dependances requises de chaque mod analyse : celles deja presentes dans la
+base sont liees, les absentes sont listees pour confirmation, puis ajoutees (avec les deux liens si
+possible) et liees.
+Options : mods non analyses, mods non resolus, selection, ou tous les mods.
+Le bouton ↻ d'une ligne (ou "Actualiser" pour une selection) relance la verification
+apres modification d'un lien. Si un mod reste "Introuvable", renseigner son lien
+manuellement (bouton de modification).
+
+6. Telechargement
+-----------------
+Selectionner les mods, cliquer sur "Telecharger (zip)", choisir la version Minecraft,
+le loader et la source. Options :
+- Essayer l'autre site si un mod est introuvable sur celui choisi.
+- Ajouter automatiquement les dependances requises. Elles sont detectees via Modrinth
+  ("required") et CurseForge (relation "required"), ajoutees a la base dans la categorie
+  "Bibliotheques et API" et incluses dans le zip. Si l'option est decochee, la liste est
+  proposee pour confirmation.
+- Ajouter le tag de categorie devant les noms de fichiers (voir ci-dessous).
+Les mods impossibles a telecharger automatiquement (restriction de l'auteur, aucune
+version compatible) sont listes dans un recapitulatif avec liens directs, egalement
+enregistre en HTML a cote du zip (..._A_TELECHARGER_A_LA_MAIN.html).
+
+7. Categories et tags
+---------------------
+Parametres > Categories et tags (ou "gerer" dans le panneau de gauche). Une categorie
+peut etre renommee (ses mods suivent) ou supprimee (ses mods deviennent sans categorie).
+Un tag est un texte facultatif, par exemple "LIB" ou "[W]". Si "Ajouter le tag de
+categorie" est coche lors d'un telechargement, les fichiers deviennent TAG_nomoriginal.jar.
+Si le tag se termine par une lettre ou un chiffre, "_" est ajoute ; s'il se termine par
+un symbole (par exemple "]"), il est utilise tel quel.
+
+8. Listes
+---------
+Selectionner des mods, puis "Listes > Enregistrer la selection" (nouvelle liste ou liste
+existante). Le menu "Listes" permet de choisir une liste, d'exporter toutes les listes
+dans un fichier .json et d'en importer. Avec une liste ouverte dans le panneau de gauche :
+renommer, remplacer son contenu par la selection, l'exporter en CSV ou .json, la supprimer.
+
+9. Confidentialite
+------------------
+La cle API reste dans config.json sur l'ordinateur local et n'est envoyee qu'a CurseForge.
+Ne pas partager config.json ni mods.db s'ils contiennent des donnees personnelles.
+
+10. Mentions legales et avertissement
+-------------------------------------
+- Programme non affilie a Modrinth, CurseForge, Overwolf, Mojang ou Microsoft, et non
+  approuve par eux. Les noms et marques appartiennent a leurs proprietaires.
+- Le programme n'appelle que l'API publique de Modrinth et l'API officielle de CurseForge,
+  a cadence limitee, avec un User-Agent identifiable. Il n'extrait pas de pages web.
+- Chaque utilisateur doit utiliser SA PROPRE cle API CurseForge gratuite (ne jamais la partager)
+  et respecter les conditions d'utilisation de CurseForge et de Modrinth (modrinth.com/legal/terms ;
+  conditions API tierces de CurseForge). Les conditions de Modrinth limitent l'usage a un cadre
+  personnel et non commercial.
+- Les fichiers sont telecharges depuis les sources officielles uniquement. Les mods dont l'auteur
+  interdit la distribution par des tiers (pas d'URL de telechargement fournie par CurseForge) ne
+  sont jamais telecharges : ils sont listes avec un lien vers la page officielle. Les fichiers de
+  mods restent sous la licence de leurs auteurs ; le programme n'heberge ni ne redistribue aucun mod.
+- Les informations des plateformes (noms, descriptions, icones) sont stockees localement a usage
+  personnel. Ne pas publier mods.db.
+- Mention IA : ce logiciel a ete ecrit avec l'aide d'un modele d'IA (Claude, d'Anthropic) et
+  teste par son mainteneur humain (serveurs simules et usage reel). Il peut contenir des
+  bogues. Fourni « en l'etat » sous licence MIT (voir LICENSE), sans garantie.
+  Sauvegarder mods.db avant toute mise a jour.
